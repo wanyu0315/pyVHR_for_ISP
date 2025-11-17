@@ -1,7 +1,7 @@
 # 不需要上传的文件夹
 Data_for_pyVHR/
 demosaic/
-pyVHR代码库/
+analyze_res_plots/
 
 # 忽略缓存和日志
 __pycache__/
