@@ -76,7 +76,7 @@ def analyze_video(video_path, pipe, video_id=1, wsize=8,
 
 # --- 在这里填入视频文件路径列表 ---
 video_files = [
-    'output_video_16bit_lossless__raw16_2raw.mkv'
+    'Data_for_pyVHR/isp_output_Video/output_video_data_1_8bit.mkv'
 ]
 
 # 用于存储所有视频的分析结果
@@ -89,7 +89,7 @@ pipe = Pipeline()
 for i, video_path in enumerate(video_files):
     # 调用分析函数，传入视频路径和ID
     # 注意：这里假设 pipe 对象已经创建
-    _, times, bpms = analyze_video(video_path, pipe, video_id=i+1, method='cpu_LGI')
+    bvps, times, bpms = analyze_video(video_path, pipe, video_id=i+1, method='cpu_LGI')
     
     # 如果结果有效，则存储起来
     if times is not None and bpms is not None:

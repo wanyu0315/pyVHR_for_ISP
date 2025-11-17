@@ -141,8 +141,8 @@ class BVP_Processor:
 if __name__ == "__main__":
     
     # 定义输入
-    ppg_file_path = 'Data_for_pyVHR/HK-PPG-COM7_sig.npy'
-    ts_file_path = 'Data_for_pyVHR/HK-PPG-COM7_ts.npy'
+    ppg_file_path = 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_sig.npy'
+    ts_file_path = 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_ts.npy'
     
     print(f"\n--- 执行'预处理'流程 ---")
     
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         print(f"错误: 找不到文件 {ppg_file_path}")
         exit()
 
-    # 计算分辨率
+    # 计算采样率
     fs = 1.0 / np.mean(np.diff(ts_signal)) # <--  动态计算 Fs
     print(f"动态计算采样率 Fs: {fs:.2f} Hz")
 
