@@ -133,19 +133,24 @@ if __name__ == "__main__":
     # ========== 配置区域 ==========
     video_configs = [
         {
-            'video_path': 'Data_for_pyVHR/isp_output_Video/output_video_data_1_8bit.mkv',
+            'video_path': 'Data_for_pyVHR/isp_output_Video/Video_1/output_video_1_isp(1)_framewell_8bit.mkv',
             'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-            'name': 'Video 1 (raw16_1)'
+            'name': 'Video 1 - isp(1)'
         },
+        # {
+        #     'video_path': 'Data_for_pyVHR/isp_output_Video/Video_1/output_video_1_isp(2)_8bit.mkv',
+        #     'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
+        #     'name': 'Video 1 - isp(2)'
+        # },
         # 添加更多视频...
     ]
     
-    rppg_method = 'cpu_CHROM'
-    window_size = 8
+    rppg_method = 'cpu_POS'
+    window_size = 16
     roi_method = 'convexhull'
     roi_approach = 'holistic'
     estimate = 'holistic'
-    output_dir = 'analyze_res_plots/rppg_alg_cmp/Video_1-cpu_CHROM'
+    output_dir = 'analyze_res_plots/rppg_alg_cmp/Video_1-cpu_POS'
  
     #  这将被保存到 JSON 文件中
     analysis_params = {
