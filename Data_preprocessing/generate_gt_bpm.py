@@ -4,6 +4,11 @@ from scipy.signal import stft
 import matplotlib.pyplot as plt
 import json
 
+
+"""
+此模块用于从实验获取的bvps和times中直接处理获得rppg分析的bpms_gt和times_gt文件
+"""
+
 # --- 预处理函数 ---
 def preprocess_ppg_simple(ppg_signal, fs):
     """
@@ -47,9 +52,9 @@ class BVP_Processor:
         self.times = None
         self.bpm = None
 
-    def spectrogram(self, winsize=5):
+    def spectrogram(self, winsize=16):
         """
-        使用 winsize(秒)样本,计算仅限于 42-240 BPM 频段的 BVP 信号频谱图。
+        使用 窗长winsize(秒)样本,计算仅限于 42-240 BPM 频段的 BVP 信号频谱图。
         """
         print("    正在计算 Spectrogram...")
         nperseg_int = int(self.fs * winsize)
@@ -123,13 +128,13 @@ def save_gt_file(bpm_values, times, output_path, metadata=None):
 if __name__ == "__main__":
     
     # ========== 配置区域 - 请修改这里的路径 ==========
-    ppg_file_path = 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_sig.npy'
-    ts_file_path = 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_ts.npy'
-    gt_output_path = 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT'
+    ppg_file_path = 'Data_for_pyVHR/gt_data/gt_wzx_nAE/HK-PPG-COM7_sig.npy'
+    ts_file_path = 'Data_for_pyVHR/gt_data/gt_wzx_nAE/HK-PPG-COM7_ts.npy'
+    gt_output_path = 'Data_for_pyVHR/gt_data/gt_wzx_nAE/bpms_times_GT'
     
     # 处理参数
-    window_sec = 8
-    BPM_target = 0.5
+    window_sec = 16
+    BPM_target = 0.5   # 目标BPM分辨率
     # ===============================================
     
     print(f"\n{'='*60}")

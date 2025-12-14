@@ -40,6 +40,10 @@ import matplotlib.pyplot as plt
 # except Exception as e:
 #     print(f"发生未知错误: {e}")
 
+"""
+旨在测试从gt文件中得到bpm_gt
+"""
+
 
 # --- 推荐的预处理函数 (只去趋势和标准化) ---
 def preprocess_ppg_simple(ppg_signal, fs):
