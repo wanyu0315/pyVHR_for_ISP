@@ -2,6 +2,7 @@
 Data_for_pyVHR/
 demosaic/
 analyze_res_plots/
+Data_preprocessing/defect_report
 
 # 忽略缓存和日志
 __pycache__/
