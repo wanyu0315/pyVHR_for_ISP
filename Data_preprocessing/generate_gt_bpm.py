@@ -128,9 +128,9 @@ def save_gt_file(bpm_values, times, output_path, metadata=None):
 if __name__ == "__main__":
     
     # ========== 配置区域 - 请修改这里的路径 ==========
-    ppg_file_path = 'Data_for_pyVHR/gt_data/gt_wzx_nAE/HK-PPG-COM7_sig.npy'
-    ts_file_path = 'Data_for_pyVHR/gt_data/gt_wzx_nAE/HK-PPG-COM7_ts.npy'
-    gt_output_path = 'Data_for_pyVHR/gt_data/gt_wzx_nAE/bpms_times_GT'
+    ppg_file_path = 'Data_for_pyVHR/gt_data/gt_lzj_nAE/HK-PPG-COM7_sig.npy'
+    ts_file_path = 'Data_for_pyVHR/gt_data/gt_lzj_nAE/HK-PPG-COM7_ts.npy'
+    gt_output_path = 'Data_for_pyVHR/gt_data/gt_lzj_nAE/bpms_times_GT'
     
     # 处理参数
     window_sec = 16
