@@ -276,7 +276,7 @@ class DefectMapGenerator:
         # 4.1 绝对低值检测（只检测真正的0或极低值）
         # 对于16bit数据，黑电平通常在10-50之间
         # Dead pixel应该 << 黑电平
-        absolute_dead_threshold = 2.0  # 绝对阈值，接近0才算
+        absolute_dead_threshold = 1.0  # 绝对阈值，接近0才算
         
         # 4.2 时间稳定性检测
         # Dead pixel的特征：值极低且时间方差接近0
@@ -762,7 +762,7 @@ if __name__ == '__main__':
     # 使用示例
     defect_map = generate_defect_map(
         dark_frame_folder='ISPpipline/raw_data/raw_dark_frames_long',
-        output_folder='ISPpipline/report/bad_points_report_long',
+        output_folder='/home/lizize/pyVHR_for_ISP/Data_preprocessing/defect_report/bad_points_report_longtimevideo',
         width=1280,
         height=800,
         dtype=np.uint16,
