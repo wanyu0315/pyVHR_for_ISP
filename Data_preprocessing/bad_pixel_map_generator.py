@@ -2,6 +2,7 @@
 """
 坏点位置图生成工具
 从全黑暗场帧中检测并标记Dead Pixel和Hot Pixel，生成报告图以及坏点地图给坏点校正使用。
+（支持 Bayer 阵列通道级隔离检测）
 """
 
 import numpy as np
@@ -18,16 +19,73 @@ class DefectMapGenerator:
     从暗场帧中检测坏点并生成位置图
     """
     
-    def __init__(self):
+    def __init__(self, bayer_pattern: str = 'RGGB'):
         """初始化生成器"""
         self.dark_frames = []
         self.defect_map = None
         self.defect_types = None
+        # 新增：保存Bayer阵列模式
+        self.bayer_pattern = bayer_pattern.upper()
+        
+    # ====================================================================
+    # Bayer 通道隔离模块
+    # ====================================================================
+    def _split_bayer(self, image: np.ndarray) -> dict:
+        """将整图按 Bayer 模式拆分为 4 个独立的颜色通道"""
+        h, w = image.shape
+        channels = {}
+        if self.bayer_pattern == 'RGGB':
+            channels['R']  = image[0:h:2, 0:w:2]
+            channels['Gr'] = image[0:h:2, 1:w:2]
+            channels['Gb'] = image[1:h:2, 0:w:2]
+            channels['B']  = image[1:h:2, 1:w:2]
+        elif self.bayer_pattern == 'BGGR':
+            channels['B']  = image[0:h:2, 0:w:2]
+            channels['Gb'] = image[0:h:2, 1:w:2]
+            channels['Gr'] = image[1:h:2, 0:w:2]
+            channels['R']  = image[1:h:2, 1:w:2]
+        elif self.bayer_pattern == 'GBRG':
+            channels['Gb'] = image[0:h:2, 0:w:2]
+            channels['B']  = image[0:h:2, 1:w:2]
+            channels['R']  = image[1:h:2, 0:w:2]
+            channels['Gr'] = image[1:h:2, 1:w:2]
+        elif self.bayer_pattern == 'GRBG':
+            channels['Gr'] = image[0:h:2, 0:w:2]
+            channels['R']  = image[0:h:2, 1:w:2]
+            channels['B']  = image[1:h:2, 0:w:2]
+            channels['Gb'] = image[1:h:2, 1:w:2]
+        return channels
+
+    def _merge_bayer(self, channels: dict, shape: tuple) -> np.ndarray:
+        """将 4 个通道的检测结果合并回原图分辨率"""
+        h, w = shape
+        merged = np.zeros((h, w), dtype=bool)
+        if self.bayer_pattern == 'RGGB':
+            merged[0:h:2, 0:w:2] = channels['R']
+            merged[0:h:2, 1:w:2] = channels['Gr']
+            merged[1:h:2, 0:w:2] = channels['Gb']
+            merged[1:h:2, 1:w:2] = channels['B']
+        elif self.bayer_pattern == 'BGGR':
+            merged[0:h:2, 0:w:2] = channels['B']
+            merged[0:h:2, 1:w:2] = channels['Gb']
+            merged[1:h:2, 0:w:2] = channels['Gr']
+            merged[1:h:2, 1:w:2] = channels['R']
+        elif self.bayer_pattern == 'GBRG':
+            merged[0:h:2, 0:w:2] = channels['Gb']
+            merged[0:h:2, 1:w:2] = channels['B']
+            merged[1:h:2, 0:w:2] = channels['R']
+            merged[1:h:2, 1:w:2] = channels['Gr']
+        elif self.bayer_pattern == 'GRBG':
+            merged[0:h:2, 0:w:2] = channels['Gr']
+            merged[0:h:2, 1:w:2] = channels['R']
+            merged[1:h:2, 0:w:2] = channels['B']
+            merged[1:h:2, 1:w:2] = channels['Gb']
+        return merged
     
     def load_dark_frames(self, dark_frame_folder: str,
-                        width: int, height: int,
-                        dtype: type = np.uint16,
-                        pattern: str = '*.raw') -> int:
+                         width: int, height: int,
+                         dtype: type = np.uint16,
+                         pattern: str = '*.raw') -> int:
         """
         加载暗场帧
         
@@ -73,8 +131,8 @@ class DefectMapGenerator:
         return len(self.dark_frames)
     
     def detect_defects(self, method: str = 'statistical',
-                      sensitivity: float = 1.0,
-                      **kwargs) -> np.ndarray:
+                       sensitivity: float = 1.0,
+                       **kwargs) -> np.ndarray:
         """
         检测坏点并生成位置图
         
@@ -131,7 +189,7 @@ class DefectMapGenerator:
         return defect_map
     
     def _detect_statistical(self, sensitivity: float,
-                           sigma_threshold: float = None) -> np.ndarray:
+                            sigma_threshold: float = None) -> np.ndarray:
         """
         统计方法：基于标准差检测（修复版）
         原理：坏点与周围像素的差异显著大于正常像素
@@ -145,33 +203,70 @@ class DefectMapGenerator:
         
         # 1. 计算所有帧的平均和标准差
         dark_stack = np.stack(self.dark_frames, axis=0).astype(np.float32)
-        avg_frame = np.mean(dark_stack, axis=0)
-        std_frame = np.std(dark_stack, axis=0)
-        median_frame = np.median(dark_stack, axis=0)
+        avg_frame_full = np.mean(dark_stack, axis=0)
+        std_frame_full = np.std(dark_stack, axis=0)
+        median_frame_full = np.median(dark_stack, axis=0)
         
-        print(f"  平均值范围: [{avg_frame.min():.2f}, {avg_frame.max():.2f}]")
-        print(f"  中位数范围: [{median_frame.min():.2f}, {median_frame.max():.2f}]")
-        print(f"  标准差范围: [{std_frame.min():.2f}, {std_frame.max():.2f}]")
+        print(f"  平均值范围: [{avg_frame_full.min():.2f}, {avg_frame_full.max():.2f}]")
+        print(f"  中位数范围: [{median_frame_full.min():.2f}, {median_frame_full.max():.2f}]")
+        print(f"  标准差范围: [{std_frame_full.min():.2f}, {std_frame_full.max():.2f}]")
         
-        # 2. 计算局部统计量（用于检测局部异常）
-        window_size = 5
-        local_mean = uniform_filter(avg_frame, size=window_size)
-        local_mean_sq = uniform_filter(avg_frame**2, size=window_size)
-        local_var = local_mean_sq - local_mean**2
-        local_std = np.sqrt(np.maximum(local_var, 0))
+        # --- Bayer通道拆分处理 ---
+        avg_channels = self._split_bayer(avg_frame_full)
+        std_channels = self._split_bayer(std_frame_full)
         
-        # 3. 基于局部偏差的异常检测
-        deviation = np.abs(avg_frame - local_mean)
+        defect_ch = {}
+        dead_ch = {}
+        hot_ch = {}
         
-        # 自适应阈值
-        if sigma_threshold is None:
-            sigma_threshold = 3.5 / sensitivity  # 提高基础阈值
-        
-        threshold = sigma_threshold * (local_std + 0.5)  # 减小偏移量
-        
-        # 初始异常点标记
-        defect_map = deviation > threshold
-        
+        for ch in avg_channels.keys():
+            avg_frame = avg_channels[ch]
+            std_frame = std_channels[ch]
+            
+            # 2. 计算局部统计量（用于检测局部异常）
+            window_size = 5
+            local_mean = uniform_filter(avg_frame, size=window_size)
+            local_mean_sq = uniform_filter(avg_frame**2, size=window_size)
+            local_var = local_mean_sq - local_mean**2
+            local_std = np.sqrt(np.maximum(local_var, 0))
+            
+            # 3. 基于局部偏差的异常检测
+            deviation = np.abs(avg_frame - local_mean)
+            
+            # 自适应阈值
+            if sigma_threshold is None:
+                sigma_threshold = 3.5 / sensitivity  # 提高基础阈值
+            
+            threshold = sigma_threshold * (local_std + 0.5)  # 减小偏移量
+            
+            # 初始异常点标记
+            defect_ch[ch] = deviation > threshold
+            
+            # 4. Dead Pixel检测逻辑准备
+            absolute_dead_threshold = 2.0  # 绝对阈值，接近0才算
+            very_low_value = avg_frame < absolute_dead_threshold
+            very_low_variance = std_frame < 0.5  # 时间方差极小
+            dead_ch[ch] = very_low_value & very_low_variance
+            
+            # 5. Hot Pixel检测逻辑准备
+            p95 = np.percentile(avg_frame, 95)
+            p99 = np.percentile(avg_frame, 99)
+            p999 = np.percentile(avg_frame, 99.9)
+            hot_value_threshold = p99 + (p999 - p99) * 0.5 / sensitivity
+            neighbor_deviation = avg_frame - local_mean
+            hot_deviation_threshold = np.percentile(neighbor_deviation, 99) / sensitivity
+            
+            hot_candidates = (avg_frame > hot_value_threshold) | (neighbor_deviation > hot_deviation_threshold)
+            high_variance = std_frame > np.percentile(std_frame, 90)
+            consistently_high = avg_frame > p95
+            
+            hot_ch[ch] = hot_candidates & (high_variance | consistently_high)
+            
+        # --- 将通道结果合并回原图尺寸 ---
+        defect_map_base = self._merge_bayer(defect_ch, avg_frame_full.shape)
+        dead_pixels = self._merge_bayer(dead_ch, avg_frame_full.shape)
+        hot_pixels = self._merge_bayer(hot_ch, avg_frame_full.shape)
+
         # ====================================================================
         # 4. Dead Pixel检测（关键修复！）
         # ====================================================================
@@ -185,12 +280,8 @@ class DefectMapGenerator:
         
         # 4.2 时间稳定性检测
         # Dead pixel的特征：值极低且时间方差接近0
-        very_low_value = avg_frame < absolute_dead_threshold
-        very_low_variance = std_frame < 0.5  # 时间方差极小
         
         # 同时满足才是Dead pixel
-        dead_pixels = very_low_value & very_low_variance
-        
         print(f"  Dead pixel检测:")
         print(f"    绝对阈值: {absolute_dead_threshold}")
         print(f"    检测到: {np.sum(dead_pixels)} 个")
@@ -201,9 +292,9 @@ class DefectMapGenerator:
         # 使用百分位数而非均值+标准差，更robust
         
         # 5.1 使用高百分位数作为正常上限
-        p95 = np.percentile(avg_frame, 95)
-        p99 = np.percentile(avg_frame, 99)
-        p999 = np.percentile(avg_frame, 99.9)
+        p95 = np.percentile(avg_frame_full, 95)
+        p99 = np.percentile(avg_frame_full, 99)
+        p999 = np.percentile(avg_frame_full, 99.9)
         
         print(f"  百分位数分析:")
         print(f"    P95:  {p95:.2f}")
@@ -217,21 +308,6 @@ class DefectMapGenerator:
         
         hot_value_threshold = p99 + (p999 - p99) * 0.5 / sensitivity
         
-        # 相对邻域的偏差
-        neighbor_deviation = avg_frame - local_mean
-        hot_deviation_threshold = np.percentile(neighbor_deviation, 99) / sensitivity
-        
-        # Hot pixel候选
-        hot_candidates = (avg_frame > hot_value_threshold) | \
-                        (neighbor_deviation > hot_deviation_threshold)
-        
-        # 进一步验证：检查时间稳定性
-        # Hot pixel通常有较大的时间方差或持续高值
-        high_variance = std_frame > np.percentile(std_frame, 90)
-        consistently_high = avg_frame > p95
-        
-        hot_pixels = hot_candidates & (high_variance | consistently_high)
-        
         print(f"  Hot pixel检测:")
         print(f"    值阈值: {hot_value_threshold:.2f}")
         print(f"    检测到: {np.sum(hot_pixels)} 个")
@@ -239,7 +315,7 @@ class DefectMapGenerator:
         # ====================================================================
         # 6. 合并所有检测结果
         # ====================================================================
-        defect_map = defect_map | dead_pixels | hot_pixels
+        defect_map = defect_map_base | dead_pixels | hot_pixels
         
         # ====================================================================
         # 7. 后处理：移除误报
@@ -262,7 +338,7 @@ class DefectMapGenerator:
         return defect_map
     
     def _detect_temporal(self, sensitivity: float,
-                        variance_threshold: float = None) -> np.ndarray:
+                         variance_threshold: float = None) -> np.ndarray:
         """
         时间域分析：基于时间方差
         原理：坏点的时间方差异常（Dead Pixel方差为0，Hot Pixel方差大）
@@ -276,32 +352,50 @@ class DefectMapGenerator:
         dark_stack = np.stack(self.dark_frames, axis=0).astype(np.float32)
         
         # 1. 计算时间方差
-        temporal_mean = np.mean(dark_stack, axis=0)
-        temporal_var = np.var(dark_stack, axis=0)
-        temporal_std = np.sqrt(temporal_var)
+        temporal_mean_full = np.mean(dark_stack, axis=0)
+        temporal_var_full = np.var(dark_stack, axis=0)
+        temporal_std_full = np.sqrt(temporal_var_full)
         
-        print(f"  时间标准差范围: [{temporal_std.min():.2f}, {temporal_std.max():.2f}]")
+        print(f"  时间标准差范围: [{temporal_std_full.min():.2f}, {temporal_std_full.max():.2f}]")
         
-        # 2. Dead Pixels: 时间方差接近0
-        dead_threshold = temporal_std.mean() * 0.1 / sensitivity
-        dead_pixels = temporal_std < dead_threshold
+        # --- Bayer通道拆分处理 ---
+        mean_ch = self._split_bayer(temporal_mean_full)
+        var_ch = self._split_bayer(temporal_var_full)
+        std_ch = self._split_bayer(temporal_std_full)
         
-        # 3. Hot Pixels: 时间方差异常大或均值异常高
-        hot_var_threshold = temporal_var.mean() + 3 * temporal_var.std() / sensitivity
-        hot_mean_threshold = temporal_mean.mean() + 4 * temporal_mean.std() / sensitivity
+        dead_ch = {}
+        hot_ch = {}
         
-        hot_pixels = (temporal_var > hot_var_threshold) | (temporal_mean > hot_mean_threshold)
-        
+        for ch in mean_ch.keys():
+            temporal_mean = mean_ch[ch]
+            temporal_var = var_ch[ch]
+            temporal_std = std_ch[ch]
+            
+            # 2. Dead Pixels: 时间方差接近0
+            dead_threshold = temporal_std.mean() * 0.1 / sensitivity
+            dead_ch[ch] = temporal_std < dead_threshold
+            
+            # 3. Hot Pixels: 时间方差异常大或均值异常高
+            hot_var_threshold = temporal_var.mean() + 3 * temporal_var.std() / sensitivity
+            hot_mean_threshold = temporal_mean.mean() + 4 * temporal_mean.std() / sensitivity
+            hot_ch[ch] = (temporal_var > hot_var_threshold) | (temporal_mean > hot_mean_threshold)
+            
+        dead_pixels = self._merge_bayer(dead_ch, temporal_mean_full.shape)
+        hot_pixels = self._merge_bayer(hot_ch, temporal_mean_full.shape)
+
         # 4. 组合
         defect_map = dead_pixels | hot_pixels
         
-        print(f"  Dead检测阈值: {dead_threshold:.2f}")
-        print(f"  Hot方差阈值: {hot_var_threshold:.2f}")
+        # 为了兼容打印信息，计算一个全局的阈值作为展示
+        global_dead_threshold = temporal_std_full.mean() * 0.1 / sensitivity
+        global_hot_var_threshold = temporal_var_full.mean() + 3 * temporal_var_full.std() / sensitivity
+        print(f"  Dead检测阈值: {global_dead_threshold:.2f}")
+        print(f"  Hot方差阈值: {global_hot_var_threshold:.2f}")
         
         return defect_map
     
     def _detect_spatial(self, sensitivity: float,
-                       neighbor_threshold: float = None) -> np.ndarray:
+                        neighbor_threshold: float = None) -> np.ndarray:
         """
         空间域分析：基于邻域比较
         原理：坏点与相邻像素差异显著
@@ -309,21 +403,32 @@ class DefectMapGenerator:
         print("\n使用空间域方法检测...")
         
         # 使用平均帧
-        avg_frame = np.mean(self.dark_frames, axis=0).astype(np.float32)
+        avg_frame_full = np.mean(self.dark_frames, axis=0).astype(np.float32)
         
-        # 1. 计算与邻域中值的差异
-        median_filtered = median_filter(avg_frame, size=5)
-        spatial_diff = np.abs(avg_frame - median_filtered)
+        # --- Bayer通道拆分处理 ---
+        avg_channels = self._split_bayer(avg_frame_full)
+        defect_ch = {}
         
-        # 2. 自适应阈值
-        if neighbor_threshold is None:
-            neighbor_threshold = 3.0 / sensitivity
+        for ch in avg_channels.keys():
+            avg_frame = avg_channels[ch]
+            # 1. 计算与邻域中值的差异
+            median_filtered = median_filter(avg_frame, size=5)
+            spatial_diff = np.abs(avg_frame - median_filtered)
+            
+            # 2. 自适应阈值
+            if neighbor_threshold is None:
+                neighbor_threshold = 3.0 / sensitivity
+            
+            threshold = spatial_diff.mean() + neighbor_threshold * spatial_diff.std()
+            defect_ch[ch] = spatial_diff > threshold
+            
+        defect_map = self._merge_bayer(defect_ch, avg_frame_full.shape)
         
-        threshold = spatial_diff.mean() + neighbor_threshold * spatial_diff.std()
-        
-        defect_map = spatial_diff > threshold
-        
-        print(f"  空间差异阈值: {threshold:.2f}")
+        # 为了兼容打印，用全图计算一次均值展示
+        global_median = median_filter(avg_frame_full, size=5)
+        global_diff = np.abs(avg_frame_full - global_median)
+        global_thresh = global_diff.mean() + (3.0 / sensitivity) * global_diff.std()
+        print(f"  空间差异阈值: {global_thresh:.2f}")
         
         return defect_map
     
@@ -609,7 +714,8 @@ def generate_defect_map(dark_frame_folder: str,
                        height: int = 800,
                        dtype: type = np.uint16,
                        method: str = 'hybrid',
-                       sensitivity: float = 1.0):
+                       sensitivity: float = 1.0,
+                       bayer_pattern: str = 'RGGB'):
     """
     从暗场帧生成坏点位置图
     
@@ -620,12 +726,13 @@ def generate_defect_map(dark_frame_folder: str,
         dtype: 数据类型
         method: 检测方法 ('statistical', 'temporal', 'spatial', 'hybrid')
         sensitivity: 灵敏度 (0.5-2.0)
+        bayer_pattern: Bayer 阵列排列方式 (新增)
     
     Returns:
         坏点位置图（bool数组）
     """
-    # 创建生成器
-    generator = DefectMapGenerator()
+    # 创建生成器 (传入Bayer排列)
+    generator = DefectMapGenerator(bayer_pattern=bayer_pattern)
     
     # 1. 加载暗场帧
     num_frames = generator.load_dark_frames(
@@ -660,7 +767,8 @@ if __name__ == '__main__':
         height=800,
         dtype=np.uint16,
         method='hybrid',      # 推荐使用混合方法
-        sensitivity=1.0       # 标准灵敏度
+        sensitivity=1.0,      # 标准灵敏度
+        bayer_pattern='GBRG'  # 这里填入你的设备真实的排列模式
     )
     
     if defect_map is not None:
