@@ -761,7 +761,7 @@ def generate_defect_map(dark_frame_folder: str,
 if __name__ == '__main__':
     # 使用示例
     defect_map = generate_defect_map(
-        dark_frame_folder='ISPpipline/raw_data/raw_dark_frames_long',
+        dark_frame_folder='ISPpipline/raw_data/raw_dark_frames_longvideo',
         output_folder='/home/lizize/pyVHR_for_ISP/Data_preprocessing/defect_report/bad_points_report_longtimevideo',
         width=1280,
         height=800,
