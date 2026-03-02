@@ -23,7 +23,7 @@ def load_gt_file(gt_path):
     Parameters:
     -----------
     gt_path : str
-        GT文件路径(不含扩展名)，代码读取.npz的文件
+        预处理时生成的.npz文件路径(不含扩展名，例如Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT），直接使用代码拼接.npz并读取
     
     Returns:
     --------
@@ -149,7 +149,7 @@ def plot_comparison_single(timesES, bpmES, timesGT, bpmGT, video_name, output_pa
     plt.close()
 
 # --------------------------------------------------------------------------
-# 新增函数: 计算视频组平均误差
+# 计算视频组平均误差
 # --------------------------------------------------------------------------
 def calculate_group_average_errors(video_errors):
     """
@@ -189,7 +189,7 @@ def calculate_group_average_errors(video_errors):
     return {**avg_metrics, **std_metrics}
 
 # --------------------------------------------------------------------------
-# 新增函数: 绘制视频组综合对比图
+# 绘制视频组综合对比图
 # --------------------------------------------------------------------------
 def plot_group_comparison(group_results, group_name, output_path):
     """
@@ -222,6 +222,147 @@ def plot_group_comparison(group_results, group_name, output_path):
     plt.close()
 
 # --------------------------------------------------------------------------
+# 新增函数: 绘制所有视频组的误差指标条形图对比
+# --------------------------------------------------------------------------
+def plot_groups_metrics_barchart(all_group_summaries, output_path):
+    """
+    将所有视频组的平均误差指标用条形图（带误差棒）进行对比
+    """
+    if not all_group_summaries:
+        return
+
+    # 提取组名和指标
+    group_names = [summary['group_name'] for summary in all_group_summaries]
+    
+    # 定义需要绘制的指标
+    metrics_to_plot = ['RMSE', 'MAE', 'SNR', 'PCC', 'CCC']
+    
+    # 设置画布 (2行3列，或者根据指标数量自适应，这里选 2x3 留空一个)
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    axes = axes.flatten()
+    
+    x = np.arange(len(group_names))
+    width = 0.5  # 条形图宽度
+    
+    for i, metric in enumerate(metrics_to_plot):
+        ax = axes[i]
+        
+        # 提取平均值和标准差
+        means = [summary['average_metrics'][metric] for summary in all_group_summaries]
+        stds = [summary['average_metrics'][f'{metric}_std'] for summary in all_group_summaries]
+        
+        # 绘制条形图并添加误差棒 (yerr)
+        bars = ax.bar(x, means, width, yerr=stds, capsize=5, alpha=0.8, 
+                      color=plt.cm.Set2(i), edgecolor='black')
+        
+        ax.set_title(f'{metric} Comparison', fontsize=14, fontweight='bold')
+        ax.set_xticks(x)
+        
+        # 处理X轴标签太长重叠的问题
+        formatted_names = [name.replace(" - ", "\n") for name in group_names]
+        ax.set_xticklabels(formatted_names, rotation=15, ha='right', fontsize=10)
+        
+        # 为不同类型的指标设置合适的Y轴标签
+        if metric in ['RMSE', 'MAE']:
+            ax.set_ylabel('BPM', fontsize=11)
+        elif metric == 'SNR':
+            ax.set_ylabel('dB', fontsize=11)
+        else:
+            ax.set_ylabel('Value (0-1)', fontsize=11)
+            
+        ax.grid(axis='y', linestyle='--', alpha=0.7)
+        
+        # 在柱子上标出具体数值
+        for bar in bars:
+            yval = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2, yval + 0.01 * max(means),
+                    f'{yval:.2f}', ha='center', va='bottom', fontsize=10)
+
+    # 隐藏最后一个多余的子图
+    axes[5].axis('off')
+    
+    plt.suptitle('Comparison of Error Metrics Across Video Groups', fontsize=18, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    print(f"\n ✓ 所有视频组指标对比条形图已保存: {output_path}")
+    plt.close()
+
+# --------------------------------------------------------------------------
+#   绘制所有视频组的误差指标箱型图对比
+# --------------------------------------------------------------------------
+def plot_groups_metrics_boxplot(all_group_summaries, output_path):
+    """
+    将所有视频组的各个视频误差指标用箱型图进行分布对比
+    """
+    if not all_group_summaries:
+        return
+
+    group_names = [summary['group_name'] for summary in all_group_summaries]
+    metrics_to_plot = ['RMSE', 'MAE', 'SNR', 'PCC', 'CCC']
+    
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    axes = axes.flatten()
+    
+    for i, metric in enumerate(metrics_to_plot):
+        ax = axes[i]
+        
+        # 核心：提取每个Group中，所有单独视频的特定指标数据，组成二维列表
+        # 例如: [[group1_v1_rmse, group1_v2_rmse...], [group2_v1_rmse, ...]]
+        data_to_plot = []
+        for summary in all_group_summaries:
+            metric_values = [video['metrics'][metric] for video in summary['individual_videos']]
+            data_to_plot.append(metric_values)
+            
+        # 绘制箱型图
+        # patch_artist=True 允许填充颜色
+        # showmeans=True 会用三角形标出均值的位置，方便和中位数对比
+        box = ax.boxplot(data_to_plot, patch_artist=True, showmeans=True,
+                         meanprops={"marker":"^", "markerfacecolor":"white", "markeredgecolor":"black", "markersize":8},
+                         flierprops={"marker":"o", "markerfacecolor":"red", "alpha":0.5}) # 异常值标为红色
+        
+        # 为不同组的箱子涂上不同的颜色
+        colors = plt.cm.Set2(np.linspace(0, 1, len(group_names)))
+        for patch, color in zip(box['boxes'], colors):
+            patch.set_facecolor(color)
+            patch.set_alpha(0.7)
+            
+        # 修改中位数的线条样式
+        for median in box['medians']:
+            median.set(color='black', linewidth=2)
+            
+        ax.set_title(f'{metric} Distribution', fontsize=14, fontweight='bold')
+        
+        # 处理X轴标签
+        formatted_names = [name.replace(" - ", "\n") for name in group_names]
+        ax.set_xticks(range(1, len(group_names) + 1))
+        ax.set_xticklabels(formatted_names, rotation=15, ha='right', fontsize=10)
+        
+        if metric in ['RMSE', 'MAE']:
+            ax.set_ylabel('BPM', fontsize=11)
+        elif metric == 'SNR':
+            ax.set_ylabel('dB', fontsize=11)
+        else:
+            ax.set_ylabel('Value (0-1)', fontsize=11)
+            
+        ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+    # 隐藏最后一个多余的子图
+    axes[5].axis('off')
+    
+    # 添加图例说明
+    import matplotlib.lines as mlines
+    mean_line = mlines.Line2D([], [], color='white', marker='^', markeredgecolor='black', markersize=8, label='Mean (均值)')
+    median_line = mlines.Line2D([], [], color='black', linewidth=2, label='Median (中位数)')
+    outlier_dot = mlines.Line2D([], [], color='white', marker='o', markerfacecolor='red', alpha=0.5, label='Outlier (异常值)')
+    fig.legend(handles=[mean_line, median_line, outlier_dot], loc='lower right', fontsize=12, bbox_to_anchor=(0.95, 0.1))
+    
+    plt.suptitle('Distribution of Error Metrics Across Video Groups (Boxplots)', fontsize=18, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    print(f"\n ✓ 所有视频组指标分布箱型图已保存: {output_path}")
+    plt.close()
+
+# --------------------------------------------------------------------------
 # 主程序
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
@@ -230,47 +371,73 @@ if __name__ == "__main__":
     # 定义视频组结构
     video_groups = [
         {
-            'group_name': 'Video Group 1 - ISP(0)',
+            'group_name': 'Video Group 1 - baseenv_baselineISP',
+            'videos': [
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_hyl_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_hyl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lj_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_lj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lxr_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_lxr'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lzj_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_lzj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lzz_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_lzz'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_wyx_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_wyx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_wzx_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_wzx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_ycl_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_ycl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_yjc_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_yjc'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_zbw_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_zbw'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_zxh_output.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
+                    'name': 'baseenv_baselineISP_zxh'
+                },
+
+            ]
+        },
+        {
+            'group_name': 'Video Group 2 - baseenv_AHDdemosiacISP',
             'videos': [
                 {
                     'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/output_video_1_isp(0)_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'Video 1 - isp(0)'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/Video_1_bin_and_space/output_video_1_isp(1)_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'Video 1 - isp(0)'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/Video_1_bin_and_space/output_video_1_isp(2)_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'Video 1 - isp(0)'
-                },
-            ]
-        },
-        {
-            'group_name': 'Video Group 2 - Advanced ISP(2)',
-            'videos': [
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/Video_1_bin_and_space/output_video_1_isp(3)_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'Video 1 - isp(3)'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/Video_1_bin_and_space/output_video_1_isp(4)_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'Video 1 - isp(4)'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/Video_1_bin_and_space/output_video_1_isp(5)_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'Video 1 - isp(5)'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/Video_1_bin_and_space/output_video_1_isp(6)_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'Video 1 - isp(6)'
+                    'name': 'baseenv_AHDdemosiacISP'
                 },
             ]
         },
@@ -282,7 +449,7 @@ if __name__ == "__main__":
     roi_method = 'convexhull'
     roi_approach = 'holistic'
     estimate = 'holistic'
-    output_dir = 'analyze_res_plots/group_based_analysis/rppg_CHROM'
+    output_dir = 'rPPGanalyze_res_plots/sensitivity_analysis/demosaic/cpu_CHROM'
  
     analysis_params = {
         'rppg_method': rppg_method,
@@ -333,6 +500,10 @@ if __name__ == "__main__":
         # 为该视频组创建子目录
         group_output_dir = os.path.join(output_dir, f'group_{group_idx+1}_{group_name.replace(" ", "_")}')
         os.makedirs(group_output_dir, exist_ok=True)
+
+        # 为单个视频的对比图和误差图创建专属的子文件夹
+        indiv_plots_dir = os.path.join(group_output_dir, 'singleVideo_rppg_analysis')
+        os.makedirs(indiv_plots_dir, exist_ok=True)
         
         group_results = []
         group_errors = []
@@ -373,9 +544,9 @@ if __name__ == "__main__":
             bpmES_array = np.array(bpmES)
             timesES_array = np.array(timesES)
             
-            # 步骤3: 绘制对比图
+            # 步骤3: 绘制单个视频对比图
             print(f"\n[步骤 3/4] 生成对比图像...")
-            comparison_plot_path = os.path.join(group_output_dir, f'{video_name}_comparison.png')
+            comparison_plot_path = os.path.join(indiv_plots_dir, f'{video_name}_heartRate_comparison.png')
             plot_comparison_single(timesES_array, bpmES_array, timesGT, bpmGT, 
                                   video_name, comparison_plot_path)
             
@@ -401,7 +572,7 @@ if __name__ == "__main__":
                 group_errors.append(error_metrics)
                 
                 # 绘制误差分析图
-                error_plot_path = os.path.join(group_output_dir, f'{video_name}_error_analysis.png')
+                error_plot_path = os.path.join(indiv_plots_dir, f'{video_name}_rppgError_analysis.png')
                 
                 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
                 
@@ -410,7 +581,7 @@ if __name__ == "__main__":
                 timesES_plot = np.array(timesES_array)
                 bpmES_plot = np.array(bpmES_array)
                 
-                # 子图1: BPM对比
+                # 单个视频分析子图1: BPM对比
                 ax1.plot(timesGT_array, bpmGT_array, 'g-', label='Ground Truth', 
                         linewidth=2.5, marker='s', markersize=5, alpha=0.8)
                 ax1.plot(timesES_plot, bpmES_plot, 'r--', label='Estimation', 
@@ -421,7 +592,7 @@ if __name__ == "__main__":
                 ax1.legend(fontsize=11)
                 ax1.grid(True, alpha=0.3, linestyle='--')
                 
-                # 子图2: 绝对误差
+                # 单个视频分析子图2: 绝对误差
                 if len(timesGT_array) > 1 and len(timesES_plot) > 1:
                     try:
                         f_interp = interp1d(timesGT_array, bpmGT_array, 
@@ -500,7 +671,7 @@ if __name__ == "__main__":
                 json.dump(group_summary, f, indent=4)
             print(f"✓ 视频组摘要已保存: {group_json_path}")
             
-            # 绘制视频组综合对比图
+            # 单个视频组综合对比图
             if group_results:
                 group_comparison_path = os.path.join(group_output_dir, 'group_comparison.png')
                 plot_group_comparison(group_results, group_name, group_comparison_path)
@@ -524,6 +695,14 @@ if __name__ == "__main__":
                   f"{metrics['MAX']:<10.3f} {metrics['PCC']:<10.3f} {metrics['CCC']:<10.3f} {metrics['SNR']:<10.3f}")
         print(f"{'='*100}\n")
     
+        # 1. 绘制所有视频组的平均误差条形图
+        final_barchart_path = os.path.join(output_dir, 'all_groups_barchart_of_average_errors.png')
+        plot_groups_metrics_barchart(all_group_summaries, final_barchart_path)
+
+        # 2. 绘制学术级箱型图分布图
+        final_boxplot_path = os.path.join(output_dir, 'all_groups_metrics_boxplot.png')
+        plot_groups_metrics_boxplot(all_group_summaries, final_boxplot_path)
+
     print(f"\n{'='*80}")
     print(f"所有处理完成！")
     print(f"结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
