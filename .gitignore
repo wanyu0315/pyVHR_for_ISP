@@ -1,7 +1,7 @@
 # 不需要上传的文件夹
 Data_for_pyVHR/
 demosaic/
-analyze_res_plots/
+rPPGanalyze_res_plots/
 Data_preprocessing/defect_report
 
 # 忽略缓存和日志
