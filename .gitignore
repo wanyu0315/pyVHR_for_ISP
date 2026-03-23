@@ -4,6 +4,7 @@ demosaic/
 rPPGanalyze_res_plots/
 Data_preprocessing/defect_report/
 isp_debug_probes/
+probe_analysis/probe_analysis_result/
 
 # 忽略缓存和日志
 __pycache__/
