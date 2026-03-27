@@ -3,8 +3,10 @@ Data_for_pyVHR/
 demosaic/
 rPPGanalyze_res_plots/
 Data_preprocessing/defect_report/
-isp_debug_probes/
+probes_debug/
 probe_analysis/probe_analysis_result/
+.vscode/
+.claude/
 
 # 忽略缓存和日志
 __pycache__/
