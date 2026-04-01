@@ -371,76 +371,364 @@ if __name__ == "__main__":
     # 定义视频组结构
     video_groups = [
         {
-            'group_name': 'Video Group 1 - baseenv_baselineISP',
+            'group_name': 'baseenv_baselineISP_VG',
             'videos': [
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_hyl_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_hyl_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
                     'name': 'baseenv_baselineISP_hyl'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lj_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lj_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lj'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lxr_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lxr_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lxr'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lzj_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lzj_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lzj'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_lzz_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lzz_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lzz'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_wyx_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_wyx_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
                     'name': 'baseenv_baselineISP_wyx'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_wzx_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_wzx_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
                     'name': 'baseenv_baselineISP_wzx'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_ycl_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_ycl_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
                     'name': 'baseenv_baselineISP_ycl'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_yjc_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_yjc_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
                     'name': 'baseenv_baselineISP_yjc'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_zbw_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_zbw_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
                     'name': 'baseenv_baselineISP_zbw'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenvironment_baselineISP/raw_zxh_output.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_zxh_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
                     'name': 'baseenv_baselineISP_zxh'
                 },
-
             ]
         },
         {
-            'group_name': 'Video Group 2 - baseenv_AHDdemosiacISP',
+            'group_name': 'baseenv_0.8gammaISP_VG',
             'videos': [
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/rawdenoise/output_video_1_isp(0)_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/raw16_1_gtData/HK-PPG-COM7_GT',
-                    'name': 'baseenv_AHDdemosiacISP'
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_hyl_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_hyl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lj_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_lj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lxr_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_lxr'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lzj_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_lzj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lzz_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_lzz'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_wyx_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_wyx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_wzx_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_wzx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_ycl_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_ycl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_yjc_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_yjc'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_zbw_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_zbw'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_zxh_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
+                    'name': 'baseenv_0.8gammaISP_zxh'
                 },
             ]
         },
+        {
+            'group_name': 'baseenv_1.0gammaISP_VG',
+            'videos': [
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_hyl_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_hyl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lj_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_lj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lxr_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_lxr'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lzj_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_lzj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lzz_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_lzz'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_wyx_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_wyx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_wzx_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_wzx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_ycl_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_ycl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_yjc_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_yjc'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_zbw_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_zbw'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_zxh_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
+                    'name': 'baseenv_1.0gammaISP_zxh'
+                },
+            ]
+        },
+        {
+            'group_name': 'baseenv_3.0gammaISP_VG',
+            'videos': [
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_hyl_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_hyl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lj_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_lj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lxr_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_lxr'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzj_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_lzj'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzz_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_lzz'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wyx_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_wyx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wzx_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_wzx'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_ycl_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_ycl'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_yjc_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_yjc'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zbw_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_zbw'
+                },
+                {
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zxh_output_8bit.mkv',
+                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
+                    'name': 'baseenv_3.0gammaISP_zxh'
+                },
+            ]
+        },
+        # {
+        #     'group_name': 'baseenv_1.8gammaISP_VG',
+        #     'videos': [
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_hyl_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_hyl'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lj_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_lj'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lxr_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_lxr'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lzj_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_lzj'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lzz_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_lzz'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_wyx_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_wyx'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_wzx_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_wzx'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_ycl_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_ycl'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_yjc_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_yjc'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_zbw_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_zbw'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_zxh_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
+        #             'name': 'baseenv_1.8gammaISP_zxh'
+        #         },
+        #     ]
+        # },{
+        #     'group_name': 'baseenv_3.0gammaISP_VG',
+        #     'videos': [
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_hyl_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_hyl'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lj_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_lj'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lxr_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_lxr'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzj_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_lzj'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzz_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_lzz'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wyx_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_wyx'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wzx_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_wzx'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_ycl_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_ycl'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_yjc_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_yjc'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zbw_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_zbw'
+        #         },
+        #         {
+        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zxh_output.mkv',
+        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
+        #             'name': 'baseenv_3.0gammaISP_zxh'
+        #         },
+        #     ]
+        # },
         # 可以继续添加更多视频组...
     ]
     
@@ -449,7 +737,7 @@ if __name__ == "__main__":
     roi_method = 'convexhull'
     roi_approach = 'holistic'
     estimate = 'holistic'
-    output_dir = 'rPPGanalyze_res_plots/sensitivity_analysis/demosaic/cpu_CHROM'
+    output_dir = 'rPPGanalyze_res_plots/sensitivity_analysis/gamma/cpu_CHROM_v1'
  
     analysis_params = {
         'rppg_method': rppg_method,
@@ -709,3 +997,246 @@ if __name__ == "__main__":
     print(f"成功处理视频组数: {len(all_group_summaries)}/{len(video_groups)}")
     print(f"输出目录: {output_dir}")
     print(f"{'='*80}\n")
+
+
+# ============================================================================
+# 自动化集成接口函数（供 automation_pipeline.py 调用）
+# ============================================================================
+
+def run_pyvhr_analysis(video_groups: list, analysis_params: dict, output_dir: str) -> dict:
+    """
+    pyVHR 分析封装函数，供自动化脚本调用
+
+    Parameters:
+    -----------
+    video_groups : list
+        视频组配置列表
+    analysis_params : dict
+        pyVHR 分析参数（rppg_method, window_size, roi_method 等）
+    output_dir : str
+        分析结果输出目录
+
+    Returns:
+    --------
+    dict : 包含所有视频组的分析结果摘要
+    """
+
+    print(f"\n{'='*80}")
+    print(f"pyVHR 视频组批量分析系统")
+    print(f"{'='*80}")
+    print(f"开始时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"视频组数量: {len(video_groups)}")
+
+    total_videos = sum(len(group['videos']) for group in video_groups)
+    print(f"待处理视频总数: {total_videos}")
+
+    print(f"\n--- 本次运行分析参数 ---")
+    print(json.dumps(analysis_params, indent=2))
+    print(f"{'='*80}\n")
+
+    os.makedirs(output_dir, exist_ok=True)
+    print(f"✓ 输出目录已创建: {output_dir}\n")
+
+    pipe = Pipeline()
+    all_group_summaries = []
+    # 循环处理每个视频组
+    for group_idx, video_group in enumerate(video_groups):
+        group_name = video_group['group_name']
+        videos = video_group['videos']
+
+        print(f"\n{'='*80}")
+        print(f"处理视频组 [{group_idx+1}/{len(video_groups)}]: {group_name}")
+        print(f"该组包含 {len(videos)} 个视频")
+        print(f"{'='*80}")
+
+        group_output_dir = os.path.join(output_dir, f'group_{group_idx+1}_{group_name.replace(" ", "_")}')
+        os.makedirs(group_output_dir, exist_ok=True)
+
+        indiv_plots_dir = os.path.join(group_output_dir, 'singleVideo_rppg_analysis')
+        os.makedirs(indiv_plots_dir, exist_ok=True)
+
+        group_results = []
+        group_errors = []
+
+        # 循环处理该组内的每个视频
+        for video_idx, config in enumerate(videos):
+            print(f"\n{'-'*70}")
+            print(f"视频进度: [{video_idx+1}/{len(videos)}] - {config['name']}")
+            print(f"{'-'*70}")
+
+            video_path = config['video_path']
+            gt_path = config['gt_path']
+            video_name = config['name']
+
+            # 加载 GT
+            print(f"\n[步骤 1/4] 加载Ground Truth数据...")
+            bpmGT, timesGT, metadata = load_gt_file(gt_path)
+
+            if bpmGT is None:
+                print(f"  ✗ 跳过视频 {video_name}: 无法加载GT数据\n")
+                continue
+
+            # 分析视频
+            print(f"\n[步骤 2/4] 使用pyVHR分析视频...")
+            bvps, timesES, bpmES = analyze_video(
+                video_path, pipe, video_id=video_idx+1,
+                method=analysis_params['rppg_method'],
+                wsize=analysis_params['window_size'],
+                roi_method=analysis_params['roi_method'],
+                roi_approach=analysis_params['roi_approach'],
+                estimate=analysis_params['estimate']
+            )
+
+            if timesES is None or bpmES is None:
+                print(f"  ✗ 跳过视频 {video_name}: 分析失败\n")
+                continue
+
+            bpmES_array = np.array(bpmES)
+            timesES_array = np.array(timesES)
+
+            # 绘制对比图
+            print(f"\n[步骤 3/4] 生成对比图像...")
+            comparison_plot_path = os.path.join(indiv_plots_dir, f'{video_name}_heartRate_comparison.png')
+            plot_comparison_single(timesES_array, bpmES_array, timesGT, bpmGT, video_name, comparison_plot_path)
+
+            # 误差分析
+            print(f"\n[步骤 4/4] 计算误差指标...")
+            try:
+                RMSE, MAE, MAX, PCC, CCC, SNR = getErrors(
+                    bvps, fps, bpmES_array, bpmGT, timesES_array, timesGT
+                )
+
+                print(f"\n  --- {video_name} 的误差指标 ---")
+                printErrors(RMSE, MAE, MAX, PCC, CCC, SNR)
+
+                error_metrics = {
+                    'RMSE': float(RMSE) if hasattr(RMSE, 'item') else float(RMSE),
+                    'MAE': float(MAE) if hasattr(MAE, 'item') else float(MAE),
+                    'MAX': float(MAX) if hasattr(MAX, 'item') else float(MAX),
+                    'PCC': float(PCC) if hasattr(PCC, 'item') else float(PCC),
+                    'CCC': float(CCC) if hasattr(CCC, 'item') else float(CCC),
+                    'SNR': float(SNR) if hasattr(SNR, 'item') else float(SNR)
+                }
+
+                group_errors.append(error_metrics)
+
+                # 绘制误差分析图（简化版，复用现有逻辑）
+                error_plot_path = os.path.join(indiv_plots_dir, f'{video_name}_rppgError_analysis.png')
+                fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+
+                timesGT_array = np.array(timesGT)
+                bpmGT_array = np.array(bpmGT)
+
+                ax1.plot(timesGT_array, bpmGT_array, 'g-', label='Ground Truth',
+                        linewidth=2.5, marker='s', markersize=5, alpha=0.8)
+                ax1.plot(timesES_array, bpmES_array, 'r--', label='Estimation',
+                        linewidth=2.5, marker='o', markersize=5, alpha=0.8)
+                ax1.set_xlabel('Time (seconds)', fontsize=12, fontweight='bold')
+                ax1.set_ylabel('BPM', fontsize=12, fontweight='bold')
+                ax1.set_title(f'BPM Comparison: {video_name}', fontsize=14, fontweight='bold')
+                ax1.legend(fontsize=11)
+                ax1.grid(True, alpha=0.3, linestyle='--')
+
+                if len(timesGT_array) > 1 and len(timesES_array) > 1:
+                    try:
+                        f_interp = interp1d(timesGT_array, bpmGT_array, kind='linear', fill_value='extrapolate')
+                        bpmGT_interp = f_interp(timesES_array)
+                        abs_errors = np.abs(bpmES_array - bpmGT_interp)
+
+                        ax2.plot(timesES_array, abs_errors, 'b-', linewidth=2.5,
+                                marker='o', markersize=5, alpha=0.8, label='Absolute Error')
+                        ax2.axhline(y=error_metrics['MAE'], color='r', linestyle='--',
+                                   linewidth=2, label=f'MAE = {error_metrics["MAE"]:.2f}')
+                        ax2.fill_between(timesES_array, 0, abs_errors, alpha=0.2, color='blue')
+                        ax2.set_xlabel('Time (seconds)', fontsize=12, fontweight='bold')
+                        ax2.set_ylabel('Absolute Error (BPM)', fontsize=12, fontweight='bold')
+                        ax2.set_title('Absolute Error Over Time', fontsize=14, fontweight='bold')
+                        ax2.legend(fontsize=11)
+                        ax2.grid(True, alpha=0.3, linestyle='--')
+                    except Exception:
+                        pass
+
+                plt.tight_layout()
+                plt.savefig(error_plot_path, dpi=150, bbox_inches='tight')
+                print(f"  ✓ 误差分析图已保存: {error_plot_path}")
+                plt.close()
+
+            except Exception as e:
+                print(f"  ✗ 误差分析出错: {e}")
+
+            group_results.append({
+                'name': video_name,
+                'times': timesES_array,
+                'bpms': bpmES_array,
+                'timesGT': timesGT,
+                'bpmGT': bpmGT
+            })
+
+            print(f"\n✓ 视频 {video_name} 处理完成！")
+
+        # 计算该视频组的平均误差
+        if group_errors:
+            avg_errors = calculate_group_average_errors(group_errors)
+
+            print(f"\n{'='*80}")
+            print(f"视频组 [{group_name}] 平均误差统计")
+            print(f"{'='*80}")
+            print(f"RMSE: {avg_errors['RMSE']:.3f} ± {avg_errors['RMSE_std']:.3f}")
+            print(f"MAE: {avg_errors['MAE']:.3f} ± {avg_errors['MAE_std']:.3f}")
+            print(f"PCC: {avg_errors['PCC']:.3f} ± {avg_errors['PCC_std']:.3f}")
+            print(f"{'='*80}\n")
+
+            group_summary = {
+                'group_name': group_name,
+                'video_count': len(group_results),
+                'parameters': analysis_params,
+                'average_metrics': avg_errors,
+                'individual_videos': [
+                    {'name': group_results[i]['name'], 'metrics': group_errors[i]}
+                    for i in range(len(group_errors))
+                ]
+            }
+            all_group_summaries.append(group_summary)
+
+            group_json_path = os.path.join(group_output_dir, 'group_summary.json')
+            with open(group_json_path, 'w') as f:
+                json.dump(group_summary, f, indent=4)
+            print(f"✓ 视频组摘要已保存: {group_json_path}")
+
+            if group_results:
+                group_comparison_path = os.path.join(group_output_dir, 'group_comparison.png')
+                plot_group_comparison(group_results, group_name, group_comparison_path)
+
+    # 保存所有视频组的总摘要
+    if all_group_summaries:
+        total_summary_path = os.path.join(output_dir, 'all_groups_summary.json')
+        with open(total_summary_path, 'w') as f:
+            json.dump(all_group_summaries, f, indent=4)
+        print(f"\n✓ 所有视频组总摘要已保存: {total_summary_path}")
+
+        print(f"\n{'='*100}")
+        print(f"所有视频组平均误差对比")
+        print(f"{'='*100}")
+        for summary in all_group_summaries:
+            metrics = summary['average_metrics']
+            print(f"{summary['group_name']:<30} RMSE:{metrics['RMSE']:.3f} MAE:{metrics['MAE']:.3f} PCC:{metrics['PCC']:.3f}")
+        print(f"{'='*100}\n")
+
+        final_barchart_path = os.path.join(output_dir, 'all_groups_barchart_of_average_errors.png')
+        plot_groups_metrics_barchart(all_group_summaries, final_barchart_path)
+
+        final_boxplot_path = os.path.join(output_dir, 'all_groups_metrics_boxplot.png')
+        plot_groups_metrics_boxplot(all_group_summaries, final_boxplot_path)
+
+    print(f"\n{'='*80}")
+    print(f"pyVHR 分析完成！")
+    print(f"结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"成功处理视频组数: {len(all_group_summaries)}/{len(video_groups)}")
+    print(f"{'='*80}\n")
+
+    return {
+        'all_group_summaries': all_group_summaries,
+        'output_dir': output_dir,
+        'total_groups': len(all_group_summaries),
+        'total_videos': total_videos
+    }

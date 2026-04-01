@@ -1,0 +1,123 @@
+# ============================================================================
+# ISP-pyVHR 自动化集成配置文件
+# ============================================================================
+
+# 实验元信息
+experiment_name: "gamma_ablation_study"
+experiment_type: "sensitivity_analysis"  # 用于构建输出路径
+
+# ============================================================================
+# ISP 配置
+# ============================================================================
+isp:
+  # 输入 RAW 帧目录
+  input_raw_dir: "ISPpipline/raw_data/baseenv_rawframe"
+
+  # 输出位深（8 或 16）
+  output_bit_depth: 8
+
+  # 传感器参数
+  sensor:
+    width: 1280
+    height: 800
+    bayer_pattern: "GRBG"
+
+  # 基线参数（固定不变的 ISP 参数）
+  baseline_params:
+    blacklevelcorrection:
+      black_level: 0
+
+    defectpixelcorrection:
+      method: "median"
+      auto_detect: false
+
+    rawdenoise:
+      bayer_pattern: "GRBG"
+      steps:
+        - algorithm: "None"
+          sigma: 0.5
+
+    whitebalance:
+      algorithm: "gray_world_green"
+      bayer_pattern: "GRBG"
+
+    demosaic:
+      algorithm: "bilinear"
+
+    colorcorrectionmatrix:
+      method: "sensor_to_srgb"
+
+    gammacorrection:
+      gamma: 2.2
+      method: "simple"
+
+    colorspaceconversion:
+      method: "bt709"
+
+    denoise:
+      algorithm: "gaussian"
+      sigma: 0.1
+
+    sharpen:
+      algorithm: "unsharp_mask"
+      radius: 1.0
+      amount: 1.2
+      threshold: 3
+
+    contrastsaturation:
+      contrast_method: "linear"
+      contrast_factor: 1.0
+      saturation_method: "linear"
+      saturation_factor: 1.0
+
+    yuvtorgb:
+      method: "bt709"
+
+  # 参数扫描配置（要变化的参数）
+  parameter_sweep:
+    target_module: "gammacorrection"  # 要扫描的模块名
+    target_param: "gamma"             # 要扫描的参数名
+    values: [0.8, 1.0, 2.2, 3.0]      # 扫描值列表
+
+# ============================================================================
+# pyVHR 配置
+# ============================================================================
+pyvhr:
+  # GT 数据目录
+  gt_data_dir: "Data_for_pyVHR/gt_data"
+
+  # 受试者列表
+  subjects:
+    - "hyl"
+    - "lj"
+    - "lxr"
+    - "lzj"
+    - "lzz"
+    - "wyx"
+    - "wzx"
+    - "ycl"
+    - "yjc"
+    - "zbw"
+    - "zxh"
+
+  # pyVHR 分析参数
+  analysis_params:
+    rppg_method: "cpu_CHROM"
+    window_size: 16
+    roi_method: "convexhull"
+    roi_approach: "holistic"
+    estimate: "holistic"
+    patch_size: 40
+    RGB_LOW_HIGH_TH: [75, 230]
+    Skin_LOW_HIGH_TH: [75, 230]
+    pre_filt: true
+    post_filt: true
+    cuda: true
+
+# ============================================================================
+# 输出路径配置
+# ============================================================================
+output:
+  isp_video_base: "Data_for_pyVHR/isp_output_Video"
+  isp_frame_base: "ISPpipline/isp_output_frame"
+  analysis_results_base: "rPPGanalyze_res_plots"
