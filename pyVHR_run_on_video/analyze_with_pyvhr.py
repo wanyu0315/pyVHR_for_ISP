@@ -46,28 +46,42 @@ def load_gt_file(gt_path):
 # --------------------------------------------------------------------------
 # 函数2: 分析视频
 # --------------------------------------------------------------------------
-def analyze_video(video_path, pipe, video_id=1, wsize=16, 
-                  roi_method='convexhull', method='cpu_CHROM', 
-                  roi_approach='holistic', estimate='holistic'):
+def analyze_video(video_path, pipe, video_id=1, wsize=16,
+                  roi_method='convexhull', method='cpu_CHROM',
+                  roi_approach='holistic', estimate='holistic',
+                  patch_size=40,
+                  RGB_LOW_HIGH_TH=(20, 230),
+                  Skin_LOW_HIGH_TH=(20, 230),
+                  pre_filt=True,
+                  post_filt=True,
+                  cuda=True,
+                  verb=True):
     """
     分析单个视频的心率特征
     """
     print(f"\n  → 正在分析视频...")
+
+    # Work around a pyVHR bug: when pre_filt=False and verb=True,
+    # Pipeline.run_on_video tries to print an undefined local variable.
+    effective_verb = verb
+    if not pre_filt and verb:
+        effective_verb = False
+        print("  [!] pyVHR 兼容处理: pre_filt=False 时自动关闭 verb，避免上游库报错。")
     
     bvps, timesES, bpmES = pipe.run_on_video(
         videoFileName=video_path,
-        winsize=wsize, 
+        winsize=wsize,
         roi_method=roi_method,
         roi_approach=roi_approach,
         method=method,
         estimate=estimate,
-        patch_size=40, 
-        RGB_LOW_HIGH_TH=(75,230),
-        Skin_LOW_HIGH_TH=(75,230),
-        pre_filt=True,
-        post_filt=True,
-        cuda=True, 
-        verb=True
+        patch_size=patch_size,
+        RGB_LOW_HIGH_TH=tuple(RGB_LOW_HIGH_TH),
+        Skin_LOW_HIGH_TH=tuple(Skin_LOW_HIGH_TH),
+        pre_filt=pre_filt,
+        post_filt=post_filt,
+        cuda=cuda,
+        verb=effective_verb
     )
 
     if bpmES is None or timesES is None or len(bpmES) == 0:
@@ -374,370 +388,130 @@ if __name__ == "__main__":
             'group_name': 'baseenv_baselineISP_VG',
             'videos': [
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_hyl_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/hyl_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
                     'name': 'baseenv_baselineISP_hyl'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lj_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/lj_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lj'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lxr_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/lxr_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lxr'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lzj_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/lzj_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lzj'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_lzz_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/lzz_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
                     'name': 'baseenv_baselineISP_lzz'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_wyx_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/wyx_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
                     'name': 'baseenv_baselineISP_wyx'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_wzx_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/wzx_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
                     'name': 'baseenv_baselineISP_wzx'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_ycl_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/ycl_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
                     'name': 'baseenv_baselineISP_ycl'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_yjc_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/yjc_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
                     'name': 'baseenv_baselineISP_yjc'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_zbw_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/zbw_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
                     'name': 'baseenv_baselineISP_zbw'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/raw_zxh_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/baseenv_baselineISP/zxh_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
                     'name': 'baseenv_baselineISP_zxh'
                 },
             ]
         },
         {
-            'group_name': 'baseenv_0.8gammaISP_VG',
+            'group_name': 'baseenv_binning_VG',
             'videos': [
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_hyl_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/hyl_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_hyl'
+                    'name': 'baseenv_binningISP_hyl'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lj_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/lj_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_lj'
+                    'name': 'baseenv_binningISP_lj'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lxr_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/lxr_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_lxr'
+                    'name': 'baseenv_binningISP_lxr'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lzj_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/lzj_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_lzj'
+                    'name': 'baseenv_binningISP_lzj'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_lzz_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/lzz_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_lzz'
+                    'name': 'baseenv_binningISP_lzz'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_wyx_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/wyx_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_wyx'
+                    'name': 'baseenv_binningISP_wyx'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_wzx_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/wzx_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_wzx'
+                    'name': 'baseenv_binningISP_wzx'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_ycl_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/ycl_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_ycl'
+                    'name': 'baseenv_binningISP_ycl'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_yjc_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/yjc_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_yjc'
+                    'name': 'baseenv_binningISP_yjc'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_zbw_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/zbw_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_zbw'
+                    'name': 'baseenv_binningISP_zbw'
                 },
                 {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/0.8/raw_zxh_output_8bit.mkv',
+                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/rawdenoise_study/binning/zxh_output_8bit.mkv',
                     'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
-                    'name': 'baseenv_0.8gammaISP_zxh'
+                    'name': 'baseenv_binningISP_zxh'
                 },
             ]
         },
-        {
-            'group_name': 'baseenv_1.0gammaISP_VG',
-            'videos': [
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_hyl_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_hyl'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lj_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_lj'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lxr_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_lxr'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lzj_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_lzj'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_lzz_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_lzz'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_wyx_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_wyx'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_wzx_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_wzx'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_ycl_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_ycl'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_yjc_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_yjc'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_zbw_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_zbw'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.0/raw_zxh_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
-                    'name': 'baseenv_1.0gammaISP_zxh'
-                },
-            ]
-        },
-        {
-            'group_name': 'baseenv_3.0gammaISP_VG',
-            'videos': [
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_hyl_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_hyl'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lj_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_lj'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lxr_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_lxr'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzj_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_lzj'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzz_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_lzz'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wyx_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_wyx'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wzx_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_wzx'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_ycl_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_ycl'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_yjc_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_yjc'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zbw_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_zbw'
-                },
-                {
-                    'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zxh_output_8bit.mkv',
-                    'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
-                    'name': 'baseenv_3.0gammaISP_zxh'
-                },
-            ]
-        },
-        # {
-        #     'group_name': 'baseenv_1.8gammaISP_VG',
-        #     'videos': [
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_hyl_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_hyl'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lj_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_lj'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lxr_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_lxr'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lzj_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_lzj'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_lzz_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_lzz'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_wyx_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_wyx'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_wzx_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_wzx'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_ycl_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_ycl'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_yjc_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_yjc'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_zbw_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_zbw'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/1.8/raw_zxh_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
-        #             'name': 'baseenv_1.8gammaISP_zxh'
-        #         },
-        #     ]
-        # },{
-        #     'group_name': 'baseenv_3.0gammaISP_VG',
-        #     'videos': [
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_hyl_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_hyl/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_hyl'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lj_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lj/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_lj'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lxr_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lxr/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_lxr'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzj_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzj/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_lzj'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_lzz_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_lzz/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_lzz'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wyx_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wyx/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_wyx'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_wzx_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_wzx/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_wzx'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_ycl_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_ycl/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_ycl'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_yjc_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_yjc/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_yjc'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zbw_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zbw/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_zbw'
-        #         },
-        #         {
-        #             'video_path': 'Data_for_pyVHR/isp_output_Video/sensitivity_analysis/baseenv/gamma/3.0/raw_zxh_output.mkv',
-        #             'gt_path': 'Data_for_pyVHR/gt_data/gt_zxh/bpms_times_GT',
-        #             'name': 'baseenv_3.0gammaISP_zxh'
-        #         },
-        #     ]
-        # },
-        # 可以继续添加更多视频组...
     ]
     
-    rppg_method = 'cpu_CHROM'
+    rppg_method = 'cpu_POS'
     window_size = 16
     roi_method = 'convexhull'
     roi_approach = 'holistic'
     estimate = 'holistic'
-    output_dir = 'rPPGanalyze_res_plots/sensitivity_analysis/gamma/cpu_CHROM_v1'
+    output_dir = 'rPPGanalyze_res_plots/sensitivity_analysis/rawdenoise_study/binning/cpu_POS'
  
     analysis_params = {
         'rppg_method': rppg_method,
@@ -746,9 +520,9 @@ if __name__ == "__main__":
         'roi_approach': roi_approach,
         'estimate': estimate,
         'patch_size': 40,
-        'RGB_LOW_HIGH_TH': (75, 230),
-        'Skin_LOW_HIGH_TH': (75, 230),
-        'pre_filt': True,
+        'RGB_LOW_HIGH_TH': (20, 230),
+        'Skin_LOW_HIGH_TH': (20, 230),
+        'pre_filt': False,
         'post_filt': True,
         'cuda': True
     }
@@ -817,12 +591,19 @@ if __name__ == "__main__":
             # 步骤2: 分析视频
             print(f"\n[步骤 2/4] 使用pyVHR分析视频...")
             bvps, timesES, bpmES = analyze_video(
-                video_path, pipe, video_id=video_idx+1, 
+                video_path, pipe, video_id=video_idx+1,
                 method=rppg_method,
                 wsize=window_size,
                 roi_method=roi_method,
                 roi_approach=roi_approach,
-                estimate=estimate
+                estimate=estimate,
+                patch_size=analysis_params.get('patch_size', 40),
+                RGB_LOW_HIGH_TH=analysis_params.get('RGB_LOW_HIGH_TH', (20, 230)),
+                Skin_LOW_HIGH_TH=analysis_params.get('Skin_LOW_HIGH_TH', (20, 230)),
+                pre_filt=analysis_params.get('pre_filt', True),
+                post_filt=analysis_params.get('post_filt', True),
+                cuda=analysis_params.get('cuda', True),
+                verb=analysis_params.get('verb', True)
             )
             
             if timesES is None or bpmES is None:
@@ -1084,7 +865,14 @@ def run_pyvhr_analysis(video_groups: list, analysis_params: dict, output_dir: st
                 wsize=analysis_params['window_size'],
                 roi_method=analysis_params['roi_method'],
                 roi_approach=analysis_params['roi_approach'],
-                estimate=analysis_params['estimate']
+                estimate=analysis_params['estimate'],
+                patch_size=analysis_params.get('patch_size', 40),
+                RGB_LOW_HIGH_TH=analysis_params.get('RGB_LOW_HIGH_TH', (20, 230)),
+                Skin_LOW_HIGH_TH=analysis_params.get('Skin_LOW_HIGH_TH', (20, 230)),
+                pre_filt=analysis_params.get('pre_filt', True),
+                post_filt=analysis_params.get('post_filt', True),
+                cuda=analysis_params.get('cuda', True),
+                verb=analysis_params.get('verb', True)
             )
 
             if timesES is None or bpmES is None:
