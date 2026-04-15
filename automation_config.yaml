@@ -3,7 +3,7 @@
 # ============================================================================
 
 # 实验元信息
-experiment_name: "gamma_ablation_study"
+experiment_name: "rawdenoise_study"
 experiment_type: "sensitivity_analysis"  # 用于构建输出路径
 
 # ============================================================================
@@ -22,62 +22,115 @@ isp:
     height: 800
     bayer_pattern: "GRBG"
 
+  # 探针系统配置
+  probe_system:
+    enabled: true                          # 全局开关
+    save_dir: "probes_debug"               # 探针输出根目录
+    start_frame: 500                        # 从第几帧开始采集
+    max_preview_frames: 10                 # 最多保存几帧图像
+    max_csv_frames: 1200                   # 最多保存几帧 CSV 数据
+
+    # 各位置探针开关
+    probes:
+      input: true                          # RAW 输入探针
+      after_blc: false                     # 黑电平校正后
+      after_dpc: true                     # 坏点校正后
+      after_rawdenoise: true              # RAW 降噪后
+      after_wb: false                      # 白平衡后
+      after_demosaic: false                # 去马赛克后
+      after_ccm: false                     # CCM 后
+      after_gamma: false                    # Gamma 后（推荐）
+      after_yuv: false                     # YUV 转换后
+      after_denoise: false                 # RGB 降噪后
+      after_sharpen: false                 # 锐化后
+      after_contrast: false                # 对比度/饱和度后
+      output: false                         # 最终输出探针
+
   # 基线参数（固定不变的 ISP 参数）
   baseline_params:
+    # 可选：输入探针（默认关闭）
+    probe_input:
+      enabled: true
+
+    # 黑电平校正
     blacklevelcorrection:
+      enabled: true
       black_level: 0
 
+    # 坏点校正
     defectpixelcorrection:
+      enabled: true
       method: "median"
       auto_detect: false
 
+    # raw域降噪
     rawdenoise:
+      enabled: true
       bayer_pattern: "GRBG"
       steps:
-        - algorithm: "None"
-          sigma: 0.5
+        - algorithm: "binning"
+          mode: average
+        - algorithm: "temporal"
+          alpha: 0.6
+          motion_thresh: 0.02
 
+
+    # 白平衡
     whitebalance:
+      enabled: true
       algorithm: "gray_world_green"
       bayer_pattern: "GRBG"
 
+    # 去马赛克
     demosaic:
+      enabled: true  # 必需模块，建议保持 true
       algorithm: "bilinear"
 
+    # CCM
     colorcorrectionmatrix:
+      enabled: true
       method: "sensor_to_srgb"
 
+    # Gamma
     gammacorrection:
+      enabled: true
       gamma: 2.2
       method: "simple"
 
     colorspaceconversion:
+      enabled: true  # 必需模块，建议保持 true
       method: "bt709"
 
     denoise:
+      enabled: false  # YUV 域降噪（默认关闭）
       algorithm: "gaussian"
       sigma: 0.1
 
     sharpen:
+      enabled: false  # 锐化（默认关闭）
       algorithm: "unsharp_mask"
       radius: 1.0
       amount: 1.2
       threshold: 3
 
     contrastsaturation:
+      enabled: true
       contrast_method: "linear"
       contrast_factor: 1.0
       saturation_method: "linear"
       saturation_factor: 1.0
 
     yuvtorgb:
+      enabled: true  # 必需模块，建议保持 true
       method: "bt709"
 
   # 参数扫描配置（要变化的参数）
+  # 不需要扫描时，将此字段整体注释掉或设置为 null：
+  #   parameter_sweep: null
   parameter_sweep:
-    target_module: "gammacorrection"  # 要扫描的模块名
-    target_param: "gamma"             # 要扫描的参数名
-    values: [0.8, 1.0, 2.2, 3.0]      # 扫描值列表
+    target_module: "rawdenoise"  # 要扫描的模块名
+    target_param: "steps[temporal].alpha"             # 要扫描的参数名
+    values: [0.40, 0.50, 0.60, 0.70, 0.80, 0.90]  # 扫描值列表
 
 # ============================================================================
 # pyVHR 配置
@@ -108,8 +161,8 @@ pyvhr:
     roi_approach: "holistic"
     estimate: "holistic"
     patch_size: 40
-    RGB_LOW_HIGH_TH: [75, 230]
-    Skin_LOW_HIGH_TH: [75, 230]
+    RGB_LOW_HIGH_TH: [10, 230]
+    Skin_LOW_HIGH_TH: [10, 230]
     pre_filt: true
     post_filt: true
     cuda: true
@@ -121,3 +174,6 @@ output:
   isp_video_base: "Data_for_pyVHR/isp_output_Video"
   isp_frame_base: "ISPpipline/isp_output_frame"
   analysis_results_base: "rPPGanalyze_res_plots"
+  probes_output_dirname: "probes_experiment"  # 探针实验目录名
+  probes_output_subdir: "rawdenoise/temporal_alpha"  # 探针子目录名，避免同一实验目录下不同运行互相覆盖
+  single_run_dirname: "binning"  # 当不进行参数扫描时的单次运行输出目录名
