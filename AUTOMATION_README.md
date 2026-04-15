@@ -291,6 +291,10 @@ ISPpipline/isp_output_frame/sensitivity_analysis/baseenv/rawdenoise_study/alpha/
 通式：
 
 ```text
+参数扫描时：
+<save_dir>/<probes_output_dirname>/<probes_output_subdir>/<variant_name>/<video_name>/<probe_name>/
+
+不扫描时：
 <save_dir>/<probes_output_dirname>/<probes_output_subdir>/<video_name>/<probe_name>/
 ```
 
@@ -301,6 +305,8 @@ ISPpipline/isp_output_frame/sensitivity_analysis/baseenv/rawdenoise_study/alpha/
 
 - `<probes_output_subdir>` 来自 `automation_config.yaml` 中的 `output.probes_output_subdir` 配置项，例如 `spatial_algorithm_scan`
 
+- `<variant_name>` 为当前扫描值，例如 `0.4`、`0.6`、`gaussian`
+
 - `<video_name>` 为每个视频名，例如 `lzz`、`hyl`
 
 - `<probe_name>` 是探针位置名称，例如 `Input`、`After_DPC`、`After_RawDenoise`
@@ -308,14 +314,15 @@ ISPpipline/isp_output_frame/sensitivity_analysis/baseenv/rawdenoise_study/alpha/
 注意：
 - `probes_debug` 不是写死的名字，而是来自 `automation_config.yaml` 中的 `isp.probe_system.save_dir`
 - 为避免同一个探针实验目录下的不同运行互相覆盖，建议总是配置 `<probes_output_subdir>`
-- 如果未配置 `output.probes_output_subdir`，则会回退到旧路径：`<save_dir>/<probes_output_dirname>/<video_name>/`
+- 参数扫描时，系统会自动把当前扫描值追加为 `<variant_name>` 这一层目录，避免不同参数值互相覆盖
+- 如果未配置 `output.probes_output_subdir`，则会回退到旧路径基座，但参数扫描时仍会追加 `<variant_name>`：`<save_dir>/<probes_output_dirname>/<variant_name>/<video_name>/`
 
 示例：
 
 ```text
-probes_debug/probes_experiment/spatial_algorithm_scan/hyl/Input/
-probes_debug/probes_experiment/spatial_algorithm_scan/hyl/After_DPC/
-probes_debug/probes_experiment/spatial_algorithm_scan/hyl/After_RawDenoise/
+probes_debug/probes_experiment/rawdenoise/temporal_alpha/0.4/hyl/Input/
+probes_debug/probes_experiment/rawdenoise/temporal_alpha/0.4/hyl/After_DPC/
+probes_debug/probes_experiment/rawdenoise/temporal_alpha/0.4/hyl/After_RawDenoise/
 ```
 
 ### 4. pyVHR 总结果目录
@@ -503,7 +510,7 @@ isp:
 
 ## 探针输出目录
 
-自动化运行时，探针目录由三级配置控制：
+自动化运行时，探针目录由配置字段和当前扫描值共同控制：
 
 ```yaml
 isp:
@@ -518,18 +525,23 @@ output:
 对应输出路径为：
 
 ```text
+参数扫描时：
+probes_debug/<probes_output_dirname>/<probes_output_subdir>/<variant_name>/<video_name>/
+
+不扫描时：
 probes_debug/<probes_output_dirname>/<probes_output_subdir>/<video_name>/
 ```
 
 例如当：
 - `output.probes_output_dirname: "probes_experiment"`
-- `output.probes_output_subdir: "spatial_algorithm_scan"`
+- `output.probes_output_subdir: "rawdenoise/temporal_alpha"`
+- 当前扫描值为 `0.4`
 
 时，路径为：
 
 ```text
-probes_debug/probes_experiment/spatial_algorithm_scan/hyl/
-probes_debug/probes_experiment/spatial_algorithm_scan/ycl/
+probes_debug/probes_experiment/rawdenoise/temporal_alpha/0.4/hyl/
+probes_debug/probes_experiment/rawdenoise/temporal_alpha/0.4/ycl/
 ```
 
 ### 模块分类

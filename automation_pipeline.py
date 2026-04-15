@@ -332,6 +332,9 @@ class AutomationPipeline:
 
             variant_video_dir = os.path.join(isp_video_base, variant_name)
             variant_frame_dir = os.path.join(isp_frame_base, variant_name)
+            variant_probe_config = copy.deepcopy(probe_config)
+            if variant_probe_config is not None:
+                variant_probe_config['probes_output_variant'] = variant_name
 
             # 运行 ISP 处理（传递探针配置）
             print(f"\n  → 运行 ISP 处理...")
@@ -340,7 +343,7 @@ class AutomationPipeline:
                 output_frame_dir=variant_frame_dir,
                 output_video_dir=variant_video_dir,
                 processing_params=processing_params,
-                probe_config=probe_config,
+                probe_config=variant_probe_config,
                 output_bit_depth=self.config['isp']['output_bit_depth'],
                 image_width=self.config['isp']['sensor']['width'],
                 image_height=self.config['isp']['sensor']['height'],
