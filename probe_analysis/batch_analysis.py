@@ -5,29 +5,44 @@ ISP 探针批量对比分析
 import os
 import sys
 sys.path.insert(0, os.path.dirname(__file__))
+# gt_reference 已移至子目录 GTPreprocessing/
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "GTPreprocessing"))
 from probe_ana_cmp import run_analysis
+from gt_reference import CONTACT_PPG_SOURCE, DEFAULT_GT_ROOT, load_gt_reference
 
 # ============================================================
 # 用户配置区（按需修改）
 # ============================================================
 
 # 单受试者模式：直接指定探针根目录
-ROOT_DIR = "isp_debug_probes/baseenv_baseISP/lzz"
+ROOT_DIR = "probes_debug/probes_test/lzz"
 
 # 多受试者模式：填入受试者名列表，留空则只处理 ROOT_DIR
 # 格式：["hyl", "wyx", "yjc"]，根目录会自动替换为 .../baseenv_baseISP/<subject>
 # 注意ROOT_DIR最后需要取到具体人名，因为后续会截取上一级目录
-SUBJECTS = ["zbw","lxr"]
+
+SUBJECTS = ["yjc","hyl","wyx"]
 
 FPS = 30.0
 
+# GT 对比配置：第一种方案为 Data_for_pyVHR/gt_data 中的接触式 PPG GT。
+# 第二种 RAW 视频 rPPG GT 后续只需生成同样包含 bpm/times 的文件并切换 GT_SOURCE/GT_PATH。
+USE_GT = True
+GT_SOURCE = CONTACT_PPG_SOURCE
+GT_ROOT = DEFAULT_GT_ROOT
+GT_PATH = ""
+GT_WINDOW_SIZE = 16.0
+GT_STRIDE = 1.0
+PROBE_TIME_MODE = "absolute_frame_id"
+PROBE_TIME_OFFSET_SEC = 0.0
+
 # 输出根目录（每个配对结果保存在其子目录中）
-OUTPUT_BASE = "probe_analysis/probe_analysis_result/baseenv_baseISP_test"
+OUTPUT_BASE = "probe_analysis/probe_analysis_result/probes_test"
 
 # 固定配对列表：(探针1目录名, 探针2目录名, 输出子目录名)
 PROBE_PAIRS = [
     # RAW 域内部
-    ("Input-BlackLevel",               "BlackLevel-DefectPixel",            "01_BLC"),
+    ("Input",                        "BlackLevel-DefectPixel",            "01_BLC"),
     ("BlackLevel-DefectPixel",       "DefectPixel-WhiteBalance",          "02_DPC"),
     ("DefectPixel-WhiteBalance",     "WhiteBalance-Demosaic",             "03_WB"),
     # 跨域：RAW → RGB
@@ -40,7 +55,7 @@ PROBE_PAIRS = [
     # YUV 域内部
     ("ColorSpace-ContrastSaturation","ContrastSaturation-YUVtoRGB",       "08_ContrastSat"),
     # 跨域：YUV → RGB
-    ("ContrastSaturation-YUVtoRGB",  "YUVtoRGB-Output",                   "09_YUV2RGB"),
+    ("ContrastSaturation-YUVtoRGB",            "Output",                   "09_YUV2RGB"),
 ]
 
 # ============================================================
@@ -50,6 +65,20 @@ def batch_run(root_dir: str, output_base: str, subject: str = ""):
     print(f"\n{'='*50}")
     print(f"受试者: {label}  根目录: {root_dir}")
     print(f"{'='*50}")
+    gt_ref = None
+    if USE_GT:
+        try:
+            gt_ref = load_gt_reference(
+                source_type=GT_SOURCE,
+                subject=label,
+                gt_root=GT_ROOT,
+                path=GT_PATH,
+            )
+            start, end = gt_ref.available_time_range()
+            print(f"GT: {GT_SOURCE} subject={label} time={start:.2f}-{end:.2f}s")
+        except Exception as e:
+            print(f"  [警告] GT加载失败，将按无GT模式分析: {e}")
+            gt_ref = None
     ok, skip, fail = 0, 0, 0
     for probe1, probe2, out_name in PROBE_PAIRS:
         csv1 = os.path.join(root_dir, probe1, f"{probe1}_timeseries.csv")
@@ -61,7 +90,17 @@ def batch_run(root_dir: str, output_base: str, subject: str = ""):
         out_dir = os.path.join(output_base, label, out_name)
         print(f"\n  [{out_name}] {probe1} vs {probe2}")
         try:
-            run_analysis(csv1, csv2, FPS, out_dir)
+            run_analysis(
+                csv1,
+                csv2,
+                FPS,
+                out_dir,
+                gt_ref=gt_ref,
+                gt_window_size=GT_WINDOW_SIZE,
+                gt_stride=GT_STRIDE,
+                probe_time_mode=PROBE_TIME_MODE,
+                probe_time_offset_sec=PROBE_TIME_OFFSET_SEC,
+            )
             ok += 1
         except Exception as e:
             print(f"  [错误] {e}")
