@@ -212,6 +212,53 @@ class AutomationPipeline:
         self.experiment_name = self.config['experiment_name']
         self.experiment_type = self.config['experiment_type']
 
+    @staticmethod
+    def _resolve_pre_filt(pre_filt_value, rppg_method: str) -> bool:
+        """
+        解析 pre_filt 参数：
+        - 字符串 "auto"（不区分大小写）：仅对 cpu_POS 关闭，其他算法开启
+        - 布尔值 / 其他值：原样返回
+        """
+        if isinstance(pre_filt_value, str) and pre_filt_value.strip().lower() == "auto":
+            return rppg_method != "cpu_POS"
+        return pre_filt_value
+
+    @staticmethod
+    def _resolve_rppg_methods(analysis_params: dict) -> List[str]:
+        """解析并规范化 pyVHR 方法列表，兼容旧版单方法配置。"""
+        configured_methods = analysis_params.get('rppg_methods')
+        legacy_method = analysis_params.get('rppg_method')
+
+        if configured_methods is None:
+            if legacy_method is None:
+                raise KeyError(
+                    "pyvhr.analysis_params 必须配置 rppg_method 或 rppg_methods"
+                )
+            methods = [legacy_method]
+        elif isinstance(configured_methods, str):
+            methods = [configured_methods]
+        elif isinstance(configured_methods, list):
+            methods = configured_methods
+        else:
+            raise TypeError(
+                "pyvhr.analysis_params.rppg_methods 必须是字符串或字符串列表"
+            )
+
+        normalized_methods: List[str] = []
+        seen = set()
+
+        for method in methods:
+            method_name = str(method).strip()
+            if not method_name or method_name in seen:
+                continue
+            normalized_methods.append(method_name)
+            seen.add(method_name)
+
+        if not normalized_methods:
+            raise ValueError("pyvhr.analysis_params.rppg_methods 不能为空")
+
+        return normalized_methods
+
     def run(self):
         """运行完整的自动化流程"""
 
@@ -233,11 +280,14 @@ class AutomationPipeline:
             single_run_variant_name=single_run_dirname
         )
         variants = generator.generate_variants()
+        analysis_params = copy.deepcopy(self.config['pyvhr']['analysis_params'])
+        rppg_methods = self._resolve_rppg_methods(analysis_params)
 
         if sweep_config is None:
             print(f"  ✓ 未配置参数扫描，以单次参数运行，输出目录名: {single_run_dirname}")
         else:
             print(f"  ✓ 生成 {len(variants)} 个参数变体")
+        print(f"  ✓ pyVHR 方法数: {len(rppg_methods)} ({', '.join(rppg_methods)})")
 
         # 准备路径
         # 有扫描时：ISP 视频/帧路径含 experiment_name 和参数维度
@@ -282,19 +332,17 @@ class AutomationPipeline:
             )
 
         if sweep_config is not None:
-            analysis_output_base = os.path.join(
+            analysis_output_root = os.path.join(
                 self.config['output']['analysis_results_base'],
                 self.experiment_type,
                 self.experiment_name,
-                path_param_dim,
-                f"{self.config['pyvhr']['analysis_params']['rppg_method']}"
+                path_param_dim
             )
         else:
-            analysis_output_base = os.path.join(
+            analysis_output_root = os.path.join(
                 self.config['output']['analysis_results_base'],
                 self.experiment_type,
-                path_param_dim,
-                f"{self.config['pyvhr']['analysis_params']['rppg_method']}"
+                path_param_dim
             )
 
         all_video_groups = []
@@ -372,25 +420,58 @@ class AutomationPipeline:
                 print(f"  ✓ video_group 构建完成，包含 {len(video_group['videos'])} 个视频")
 
         # Step 4: 运行 pyVHR 批量分析
-        print(f"\n{'='*80}")
-        print(f"[步骤 3/4] 运行 pyVHR 批量分析")
-        print(f"{'='*80}")
+        method_results = {}
+        for method_idx, rppg_method in enumerate(rppg_methods):
+            print(f"\n{'='*80}")
+            print(
+                f"[步骤 3/4] 运行 pyVHR 批量分析 "
+                f"[{method_idx+1}/{len(rppg_methods)}]: {rppg_method}"
+            )
+            print(f"{'='*80}")
 
-        result = run_pyvhr_analysis(
-            video_groups=all_video_groups,
-            analysis_params=self.config['pyvhr']['analysis_params'],
-            output_dir=analysis_output_base
-        )
+            method_analysis_params = copy.deepcopy(analysis_params)
+            method_analysis_params['rppg_method'] = rppg_method
+            method_analysis_params.pop('rppg_methods', None)
+
+            # 解析 pre_filt 的 auto 模式：仅对 cpu_POS 关闭 pre_filt，其他算法开启
+            if 'pre_filt' in method_analysis_params:
+                resolved_pre_filt = self._resolve_pre_filt(
+                    method_analysis_params['pre_filt'], rppg_method
+                )
+                if method_analysis_params['pre_filt'] != resolved_pre_filt:
+                    print(
+                        f"  ↪ pre_filt='auto' 已根据算法 {rppg_method} 解析为 "
+                        f"{resolved_pre_filt}"
+                    )
+                method_analysis_params['pre_filt'] = resolved_pre_filt
+
+            method_output_dir = os.path.join(analysis_output_root, rppg_method)
+            method_results[rppg_method] = run_pyvhr_analysis(
+                video_groups=all_video_groups,
+                analysis_params=method_analysis_params,
+                output_dir=method_output_dir
+            )
 
         print(f"\n{'='*80}")
         print(f"[步骤 4/4] 自动化流程完成")
         print(f"{'='*80}")
         print(f"  ✓ 处理参数变体数: {len(variants)}")
-        print(f"  ✓ 处理视频组数: {result['total_groups']}")
-        print(f"  ✓ 处理视频总数: {result['total_videos']}")
-        print(f"  ✓ 结果输出目录: {result['output_dir']}")
+        print(f"  ✓ pyVHR 算法数: {len(rppg_methods)}")
+        for rppg_method in rppg_methods:
+            result = method_results[rppg_method]
+            print(
+                f"  ✓ [{rppg_method}] 视频组数: {result['total_groups']}, "
+                f"视频总数: {result['total_videos']}"
+            )
+            print(f"    输出目录: {result['output_dir']}")
         print(f"  结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"{'='*80}\n")
+
+        return {
+            'variants': len(variants),
+            'rppg_methods': rppg_methods,
+            'method_results': method_results
+        }
 
 
 def main():
