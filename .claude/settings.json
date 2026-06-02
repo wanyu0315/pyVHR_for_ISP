@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.py$\")",
+      "Bash(find /tank/在读/lizize/pyVHR_for_ISP/isp_debug_probes -name *_timeseries.csv -type f)"
+    ]
+  }
+}
