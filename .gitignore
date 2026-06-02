@@ -6,7 +6,6 @@ Data_preprocessing/defect_report/
 probes_debug/
 probe_analysis/probe_analysis_result/
 .vscode/
-.claude/
 probe_analysis/raw_proxyGT_data/
 
 # 忽略缓存和日志
