@@ -136,6 +136,10 @@ class ISPParamVariantGenerator:
         target_module = self.sweep_config['target_module']
         target_param = self.sweep_config['target_param']
         values = self.sweep_config['values']
+        # 联动参数：扫描 target 时，下列 (module, param) 同步设为同一扫描值。
+        # 典型用途：色彩空间正变换 colorspaceconversion.method 与逆变换 yuvtorgb.method
+        # 必须保持同一标准，否则正逆基底失配会污染消融结论。
+        coupled_params = self.sweep_config.get('couple') or []
 
         variants = []
 
@@ -154,6 +158,26 @@ class ISPParamVariantGenerator:
                 print(f"警告: 模块 '{target_module}' 不存在于 baseline_params 中")
                 continue
 
+            # 同步联动参数到同一扫描值
+            coupling_failed = False
+            for couple_item in coupled_params:
+                couple_module = couple_item['module']
+                couple_param = couple_item['param']
+                if couple_module not in params:
+                    print(f"警告: 联动模块 '{couple_module}' 不存在于 baseline_params 中")
+                    coupling_failed = True
+                    break
+                try:
+                    self._set_nested_param(params[couple_module], couple_param, value)
+                except (KeyError, IndexError, TypeError, ValueError) as exc:
+                    print(
+                        f"警告: 联动参数路径 '{couple_module}.{couple_param}' 设置失败: {exc}"
+                    )
+                    coupling_failed = True
+                    break
+            if coupling_failed:
+                continue
+
             variant_name = f"{value}"
             variants.append((variant_name, params))
 
@@ -163,28 +187,58 @@ class ISPParamVariantGenerator:
 class VideoGroupsBuilder:
     """video_groups 自动构建器"""
 
-    def __init__(self, gt_data_dir: str, subjects: List[str]):
+    def __init__(self, gt_data_dir: str, subjects: List[str], gt_dataset: str = None):
         self.gt_data_dir = gt_data_dir
         self.subjects = subjects
+        self.gt_dataset = gt_dataset
+
+    def _resolve_gt_path(self, subject: str) -> str:
+        """Resolve GT path, preferring gt_data/<dataset>/<subject>/bpms_times_GT."""
+        candidates = []
+        if self.gt_dataset:
+            candidates.append(
+                os.path.join(self.gt_data_dir, self.gt_dataset, subject, "bpms_times_GT")
+            )
+        candidates.append(os.path.join(self.gt_data_dir, subject, "bpms_times_GT"))
+        candidates.append(os.path.join(self.gt_data_dir, f"gt_{subject}", "bpms_times_GT"))
+
+        for candidate in candidates:
+            if os.path.exists(f"{candidate}.npz"):
+                return candidate
+
+        return candidates[0]
 
     def build_from_isp_output(
         self,
         isp_output_dir: str,
         group_name_prefix: str,
-        output_bit_depth: int = 8
+        output_bit_depth: int = 8,
+        video_filename_patterns: List[str] = None
     ) -> dict:
         """从 ISP 输出目录构建 video_group"""
         videos = []
+        if video_filename_patterns is None:
+            video_filename_patterns = [
+                "{subject}_output_{output_bit_depth}bit.mkv",
+                "raw_{subject}_output.mkv",
+            ]
 
         for subject in self.subjects:
-            video_filename = f"{subject}_output_{output_bit_depth}bit.mkv"
-            video_path = os.path.join(isp_output_dir, video_filename)
+            candidate_paths = []
+            for pattern in video_filename_patterns:
+                video_filename = pattern.format(
+                    subject=subject,
+                    output_bit_depth=output_bit_depth,
+                    bit_depth=output_bit_depth,
+                )
+                candidate_paths.append(os.path.join(isp_output_dir, video_filename))
 
-            if not os.path.exists(video_path):
-                print(f"  警告: 视频文件不存在: {video_path}")
+            video_path = next((path for path in candidate_paths if os.path.exists(path)), None)
+            if video_path is None:
+                print(f"  警告: 视频文件不存在: {candidate_paths[0]}")
                 continue
 
-            gt_path = os.path.join(self.gt_data_dir, f"gt_{subject}", "bpms_times_GT")
+            gt_path = self._resolve_gt_path(subject)
 
             videos.append({
                 'video_path': video_path,
@@ -196,6 +250,29 @@ class VideoGroupsBuilder:
 
         return {
             'group_name': group_name,
+            'videos': videos
+        }
+
+    def build_from_single_video(
+        self,
+        video_path: str,
+        subject: str,
+        group_name_prefix: str,
+    ) -> dict:
+        """从单个视频文件构建 video_group。"""
+        videos = []
+        if not os.path.isfile(video_path):
+            print(f"  警告: baseline 视频文件不存在: {video_path}")
+        else:
+            gt_path = self._resolve_gt_path(subject)
+            videos.append({
+                'video_path': video_path,
+                'gt_path': gt_path,
+                'name': f"{group_name_prefix}_{subject}"
+            })
+
+        return {
+            'group_name': f"{group_name_prefix}_VG",
             'videos': videos
         }
 
@@ -259,6 +336,85 @@ class AutomationPipeline:
 
         return normalized_methods
 
+    @staticmethod
+    def _resolve_baseline_video_config(execution_config: dict):
+        """
+        解析 baseline 视频配置。
+
+        - 未配置 execution.baseline_video：兼容旧行为，使用固定 baseline 目录
+        - baseline_video: null：不加入默认 baseline 视频组
+        - baseline_video: "path/to/dir_or_file"：使用指定目录或文件
+        - baseline_video: {path, group_name_prefix, subject, video_filename_patterns}
+        """
+        if 'baseline_video' not in execution_config:
+            return {
+                'path': AutomationPipeline.BASELINE_VIDEO_GROUP_DIR,
+                'group_name_prefix': 'baseenv_baselineISP',
+            }
+
+        baseline_config = execution_config.get('baseline_video')
+        if baseline_config is None:
+            return None
+
+        if isinstance(baseline_config, str):
+            return {
+                'path': baseline_config,
+                'group_name_prefix': 'baseline',
+            }
+
+        if isinstance(baseline_config, dict):
+            path = baseline_config.get('path')
+            if path is None:
+                return None
+            return {
+                'path': path,
+                'group_name_prefix': baseline_config.get('group_name_prefix', 'baseline'),
+                'subject': baseline_config.get('subject'),
+                'video_filename_patterns': baseline_config.get('video_filename_patterns'),
+            }
+
+        raise TypeError("execution.baseline_video 必须是 null、字符串路径或字典")
+
+    def _build_baseline_video_group(
+        self,
+        builder: VideoGroupsBuilder,
+        execution_config: dict,
+        output_bit_depth: int,
+    ) -> dict:
+        baseline_config = self._resolve_baseline_video_config(execution_config)
+        if baseline_config is None:
+            print("\n  ↪ baseline_video=null，跳过默认 baseline 视频组。")
+            return {'group_name': 'baseline_disabled_VG', 'videos': []}
+
+        baseline_path = baseline_config['path']
+        group_name_prefix = baseline_config.get('group_name_prefix') or 'baseline'
+
+        if os.path.isdir(baseline_path):
+            print(f"\n  → 加载 baseline 视频目录: {baseline_path}")
+            return builder.build_from_isp_output(
+                isp_output_dir=baseline_path,
+                group_name_prefix=group_name_prefix,
+                output_bit_depth=output_bit_depth,
+                video_filename_patterns=baseline_config.get('video_filename_patterns')
+            )
+
+        subject = baseline_config.get('subject')
+        if subject is None:
+            if len(builder.subjects) == 1:
+                subject = builder.subjects[0]
+            else:
+                raise ValueError(
+                    "execution.baseline_video 指向单个视频文件时，必须配置 subject，"
+                    "除非 pyvhr.subjects 只有一个受试者"
+                )
+
+        print(f"\n  → 加载 baseline 视频文件: {baseline_path}")
+        return builder.build_from_single_video(
+            video_path=baseline_path,
+            subject=subject,
+            group_name_prefix=group_name_prefix,
+        )
+
     def run(self):
         """运行完整的自动化流程"""
 
@@ -291,7 +447,7 @@ class AutomationPipeline:
 
         # 准备路径
         # 有扫描时：ISP 视频/帧路径含 experiment_name 和参数维度
-        # 例如 .../baseenv/rawdenoise_study/alpha/0.4/
+        # 例如 .../rawdenoise_study/alpha/0.4/
         # 无扫描时：路径使用 experiment_name 作为终端目录（如 .../rawdenoise_study/baseline_run/）
         if sweep_config is not None:
             target_param = sweep_config['target_param']
@@ -304,7 +460,6 @@ class AutomationPipeline:
             isp_video_base = os.path.join(
                 self.config['output']['isp_video_base'],
                 self.experiment_type,
-                'baseenv',
                 self.experiment_name,
                 path_param_dim
             )
@@ -312,7 +467,6 @@ class AutomationPipeline:
             isp_frame_base = os.path.join(
                 self.config['output']['isp_frame_base'],
                 self.experiment_type,
-                'baseenv',
                 self.experiment_name,
                 path_param_dim
             )
@@ -320,14 +474,12 @@ class AutomationPipeline:
             isp_video_base = os.path.join(
                 self.config['output']['isp_video_base'],
                 self.experiment_type,
-                'baseenv',
                 path_param_dim
             )
 
             isp_frame_base = os.path.join(
                 self.config['output']['isp_frame_base'],
                 self.experiment_type,
-                'baseenv',
                 path_param_dim
             )
 
@@ -344,12 +496,22 @@ class AutomationPipeline:
                 self.experiment_type,
                 path_param_dim
             )
+        execution_config = self.config.get('execution') or {}
+        analysis_output_root = execution_config.get(
+            'analysis_output_root_override',
+            self.config['output'].get('analysis_output_root_override', analysis_output_root)
+        )
 
         all_video_groups = []
         builder = VideoGroupsBuilder(
             gt_data_dir=self.config['pyvhr']['gt_data_dir'],
-            subjects=self.config['pyvhr']['subjects']
+            subjects=self.config['pyvhr']['subjects'],
+            gt_dataset=self.config['pyvhr'].get('gt_dataset')
         )
+        run_isp = bool(execution_config.get('run_isp', True))
+        existing_isp_video_base = execution_config.get('existing_isp_video_base')
+        video_filename_patterns = execution_config.get('video_filename_patterns')
+        group_name_prefix_overrides = execution_config.get('group_name_prefix_overrides') or {}
         probe_config = copy.deepcopy(self.config['isp'].get('probe_system', None))
         if probe_config is not None:
             probe_output_dirname = self.config['output'].get('probes_output_dirname')
@@ -359,18 +521,16 @@ class AutomationPipeline:
             if probe_output_subdir is not None:
                 probe_config['probes_output_subdir'] = probe_output_subdir
 
-        # 无论是否执行参数扫描，最终 pyVHR 分析都始终包含固定的 baseline 视频组。
-        print(f"\n  → 加载固定 baseline 视频组...")
-        baseline_video_group = builder.build_from_isp_output(
-            isp_output_dir=self.BASELINE_VIDEO_GROUP_DIR,
-            group_name_prefix="baseenv_baselineISP",
-            output_bit_depth=self.config['isp']['output_bit_depth']
+        baseline_video_group = self._build_baseline_video_group(
+            builder=builder,
+            execution_config=execution_config,
+            output_bit_depth=self.config['isp']['output_bit_depth'],
         )
         if baseline_video_group['videos']:
             all_video_groups.append(baseline_video_group)
             print(f"  ✓ baseline 视频组已加入，包含 {len(baseline_video_group['videos'])} 个视频")
         else:
-            print(f"  ⚠️ baseline 视频组为空: {self.BASELINE_VIDEO_GROUP_DIR}")
+            print("  ↪ baseline 视频组为空，未加入分析。")
 
         # Step 2-3: 对每个参数变体运行 ISP 和构建 video_groups
         for idx, (variant_name, processing_params) in enumerate(variants):
@@ -380,25 +540,32 @@ class AutomationPipeline:
 
             variant_video_dir = os.path.join(isp_video_base, variant_name)
             variant_frame_dir = os.path.join(isp_frame_base, variant_name)
+            if not run_isp and existing_isp_video_base:
+                variant_video_dir = os.path.join(existing_isp_video_base, variant_name)
             variant_probe_config = copy.deepcopy(probe_config)
             if variant_probe_config is not None:
                 variant_probe_config['probes_output_variant'] = variant_name
 
-            # 运行 ISP 处理（传递探针配置）
-            print(f"\n  → 运行 ISP 处理...")
-            generated_videos = run_isp_pipeline(
-                input_dir=self.config['isp']['input_raw_dir'],
-                output_frame_dir=variant_frame_dir,
-                output_video_dir=variant_video_dir,
-                processing_params=processing_params,
-                probe_config=variant_probe_config,
-                output_bit_depth=self.config['isp']['output_bit_depth'],
-                image_width=self.config['isp']['sensor']['width'],
-                image_height=self.config['isp']['sensor']['height'],
-                bayer_pattern=self.config['isp']['sensor']['bayer_pattern']
-            )
+            if run_isp:
+                # 运行 ISP 处理（传递探针配置）
+                print(f"\n  → 运行 ISP 处理...")
+                generated_videos = run_isp_pipeline(
+                    input_dir=self.config['isp']['input_raw_dir'],
+                    output_frame_dir=variant_frame_dir,
+                    output_video_dir=variant_video_dir,
+                    processing_params=processing_params,
+                    probe_config=variant_probe_config,
+                    output_bit_depth=self.config['isp']['output_bit_depth'],
+                    image_width=self.config['isp']['sensor']['width'],
+                    image_height=self.config['isp']['sensor']['height'],
+                    bayer_pattern=self.config['isp']['sensor']['bayer_pattern'],
+                    input_frame_subdir=self.config['isp'].get('input_frame_subdir'),
+                    input_frame_extensions=self.config['isp'].get('input_frame_extensions')
+                )
 
-            print(f"  ✓ ISP 处理完成，生成 {len(generated_videos)} 个视频")
+                print(f"  ✓ ISP 处理完成，生成 {len(generated_videos)} 个视频")
+            else:
+                print(f"\n  ↪ execution.run_isp=false，跳过 ISP 与视频合成，复用: {variant_video_dir}")
 
             # 构建 video_group
             print(f"\n  → 构建 video_group...")
@@ -407,10 +574,12 @@ class AutomationPipeline:
                 if target_param is not None
                 else f"baseenv_{self.experiment_name}ISP"
             )
+            group_name_prefix = group_name_prefix_overrides.get(str(variant_name), group_name_prefix)
             video_group = builder.build_from_isp_output(
                 isp_output_dir=variant_video_dir,
                 group_name_prefix=group_name_prefix,
-                output_bit_depth=self.config['isp']['output_bit_depth']
+                output_bit_depth=self.config['isp']['output_bit_depth'],
+                video_filename_patterns=video_filename_patterns
             )
 
             if os.path.normpath(variant_video_dir) == os.path.normpath(self.BASELINE_VIDEO_GROUP_DIR):
